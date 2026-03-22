@@ -75,6 +75,18 @@ nav{height:var(--nh);background:#0a1628ee;backdrop-filter:blur(18px);
   transition:transform .2s}
 .fab:hover{transform:scale(1.08) rotate(90deg)}
 
+/* ════════ DAY HOURLY GRID ════════ */
+.day-hour-row{display:flex;gap:0;min-height:52px;border-bottom:1px solid #1e355833;
+  transition:background .12s}
+.day-hour-row:hover{background:#22d3ee06}
+.day-hour-lbl{width:42px;flex-shrink:0;font-size:.62rem;color:var(--muted);
+  padding:4px 6px 0 0;text-align:left;align-self:flex-start;padding-top:6px}
+.day-hour-slots{flex:1;padding:4px 6px;display:flex;flex-direction:column;gap:5px}
+.hour-empty{width:100%;padding:8px 12px;border-radius:7px;font-size:.75rem;
+  color:var(--muted);border:1px dashed var(--border);text-align:center;
+  cursor:pointer;transition:all .15s;background:transparent}
+.hour-empty:hover{background:#22d3ee10;border-color:var(--accent);color:var(--accent)}
+
 /* ════════ DAY VIEW ════════ */
 #dayGrid{padding:12px;display:flex;flex-direction:column;gap:7px}
 .appt-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
@@ -549,16 +561,20 @@ window.Cal={
     const dateStr=iso(viewDate);
     const list=getAppts(dateStr);
     const grid=document.getElementById('dayGrid');
-    if(!list.length){
-      grid.innerHTML=`<div class="empty-day"><div class="icon">🏊</div><p>אין תורים היום</p><p style="font-size:.72rem;margin-top:5px">לחץ + להוסיף</p></div>`;
-      return;
-    }
-    // therapist conflict check
+    const HOURS=Array.from({length:14},(_,i)=>i+7);
     const tHours={};
     list.forEach(a=>{const k=`${a.therapist||'t1'}_${a.time}`;tHours[k]=(tHours[k]||0)+1;});
-    grid.innerHTML=list.map((a,i)=>{
-      const conflict=(tHours[`${a.therapist||'t1'}_${a.time}`]||0)>1;
-      return a.type==='group'?this._groupCard(a,dateStr,i,conflict):this._privateCard(a,dateStr,i,conflict);
+    grid.innerHTML=HOURS.map(h=>{
+      const hStr=`${String(h).padStart(2,'0')}:00`;
+      const hAppts=list.filter(a=>(a.time||'').startsWith(String(h).padStart(2,'0')));
+      const conflict=hAppts.length>1;
+      const cards=hAppts.map((a,i)=>a.type==='group'?this._groupCard(a,dateStr,i,conflict):this._privateCard(a,dateStr,i,conflict)).join('');
+      return`<div class="day-hour-row">
+        <div class="day-hour-lbl">${hStr}</div>
+        <div class="day-hour-slots">
+          ${cards||`<div class="hour-empty" onclick="Appts.openWithDateTime('${dateStr}','${hStr}')">＋ הוסף תור</div>`}
+        </div>
+      </div>`;
     }).join('');
   },
   _privateCard(a,dateStr,i,conflict){
@@ -641,7 +657,7 @@ window.Cal={
     const dayCols=days.map(d=>{
       const dateStr=iso(d);
       const dayAppts=getAppts(dateStr);
-      const hourLines=HOURS.map(()=>`<div class="week-hour-line"></div>`).join('');
+      const hourLines=HOURS.map(h=>`<div class="week-hour-line" onclick="Appts.openWithDateTime('${dateStr}','${String(h).padStart(2,'0')}:00')"></div>`).join('');
       const apptBlocks=dayAppts.map(a=>{
         const [hh,mm]=(a.time||'07:00').split(':').map(Number);
         const top=(hh-7)*52+(mm/60)*52;
@@ -702,7 +718,7 @@ window.Cal={
         const name=a.type==='group'?a.groupName:cName(a.clientId);
         return`<div class="mcell-appt" style="background:${color}22;color:${color}" onclick="event.stopPropagation();Cal.openDetail('${a.id}','${dateStr}')">${name}</div>`;
       }).join('');
-      cells+=`<div class="month-cell${isToday?' today':''}" onclick="Cal.clickDay('${dateStr}')">
+      cells+=`<div class="month-cell${isToday?' today':''}" onclick="Appts.openWithDateTime('${dateStr}','09:00')">
         <div class="mcell-num">${d}</div>
         ${apptDots}
         ${more>0?`<div class="mcell-more">+${more} נוספים</div>`:''}
@@ -807,6 +823,15 @@ window.Appts={
     document.getElementById('fGroup').style.display=type==='group'?'block':'none';
     document.getElementById('ft-prv').classList.toggle('active',type==='private');
     document.getElementById('ft-grp').classList.toggle('active',type==='group');
+  },
+  openWithDateTime(dateStr,time){
+    this._reset();
+    document.getElementById('apptTitle').textContent='תור חדש';
+    document.getElementById('delApptBtn').style.display='none';
+    document.getElementById('aDate').value=dateStr;
+    document.getElementById('aTime').value=time;
+    this._fillClients();
+    M.open('mo-appt');
   },
   openAdd(){
     this._reset();
