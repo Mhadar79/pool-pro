@@ -1119,17 +1119,16 @@ window.GCal={
   },
 
   async addEvent(apptData){
-    if(!gcalToken){return;} // silent — not connected
+    if(!gcalToken){return;}
     const name = apptData.type==='group'
       ? `👥 ${apptData.groupName||'קבוצה'}`
       : `🏊 ${cName(apptData.clientId)}`;
-    const [h,m]=(apptData.time||'09:00').split(':');
-    const startDt=`${apptData.date}T${apptData.time}:00`;
-    const endDate=new Date(`${apptData.date}T${apptData.time}:00`);
-    endDate.setMinutes(endDate.getMinutes()+parseInt(apptData.duration||60));
-    const endDt=endDate.toISOString().slice(0,19);
 
-    // build description
+    // build proper ISO dateTime strings
+    const startDate = new Date(`${apptData.date}T${apptData.time}:00`);
+    const endDate   = new Date(startDate.getTime() + parseInt(apptData.duration||60)*60000);
+    const toISO = d => d.toISOString(); // UTC is fine with timeZone specified
+
     let desc=`מטפלת: ${THER[apptData.therapist||'t1']}`;
     if(apptData.type==='private'){
       const c=clients[apptData.clientId]||{};
@@ -1142,16 +1141,15 @@ window.GCal={
     if(apptData.notes)desc+=`\n${apptData.notes}`;
 
     const event={
-      summary:name,
-      description:desc,
-      start:{dateTime:startDt,timeZone:'Asia/Jerusalem'},
-      end:{dateTime:endDt,timeZone:'Asia/Jerusalem'},
-      colorId:apptData.type==='group'?'3':'1',
+      summary: name,
+      description: desc,
+      start:{ dateTime: toISO(startDate), timeZone:'Asia/Jerusalem' },
+      end:  { dateTime: toISO(endDate),   timeZone:'Asia/Jerusalem' },
+      colorId: apptData.type==='group'?'3':'1',
     };
 
-    // recurrence
-    if(apptData.recurring==='weekly')  event.recurrence=['RRULE:FREQ=WEEKLY'];
-    if(apptData.recurring==='biweekly')event.recurrence=['RRULE:FREQ=WEEKLY;INTERVAL=2'];
+    if(apptData.recurring==='weekly')   event.recurrence=['RRULE:FREQ=WEEKLY'];
+    if(apptData.recurring==='biweekly') event.recurrence=['RRULE:FREQ=WEEKLY;INTERVAL=2'];
 
     try{
       const res=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
@@ -1159,9 +1157,10 @@ window.GCal={
         headers:{Authorization:`Bearer ${gcalToken}`,'Content-Type':'application/json'},
         body:JSON.stringify(event)
       });
-      if(res.ok){toast('📅 נוסף ל-Google Calendar');}
-      else if(res.status===401){gcalToken=null;this._setConnected(false);toast('⚠️ חיבור Google פג — התחבר מחדש');}
-    }catch(e){console.warn('GCal error',e);}
+      if(res.ok){ toast('📅 נוסף ל-Google Calendar ✓'); }
+      else if(res.status===401){ gcalToken=null; this._setConnected(false); toast('⚠️ חיבור Google פג — התחבר מחדש'); }
+      else { const err=await res.json(); console.warn('GCal error',err); toast('⚠️ שגיאה ב-Google Calendar'); }
+    }catch(e){ console.warn('GCal error',e); }
   },
 
   async deleteEvent(gcalId){
