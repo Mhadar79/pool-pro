@@ -918,13 +918,16 @@ window.Appts={
     const sid=id||push(ref(db,'appts')).key;
     await set(ref(db,`appts/${sid}`),data);
     // sync to Google Calendar
-    GCal.addEvent(data);
+    GCal.addEvent(data, sid);
     viewDate=new Date(date+'T12:00:00');
     M.close('mo-appt');App.openPanel('calendar');toast('✅ תור נשמר');
   },
   async del(){
     const id=document.getElementById('aId').value;
     if(!id||!confirm('למחוק?'))return;
+    // delete from Google Calendar first
+    const a=appts[id];
+    if(a?.gcalId) await GCal.deleteEvent(a.gcalId);
     await remove(ref(db,`appts/${id}`));
     M.close('mo-appt');toast('🗑️ נמחק');
   }
@@ -1118,7 +1121,27 @@ window.GCal={
     else{btn.textContent='📅 Google';btn.classList.remove('connected');}
   },
 
-  async addEvent(apptData){
+  _colorToGcalId(hexColor){
+    // Google Calendar color IDs:
+    // 1=כחול כהה, 2=ירוק, 3=סגול, 4=אדום, 5=צהוב, 6=כתום, 7=טורקיז, 8=אפור, 9=כחול, 10=ירוק כהה, 11=אדום כהה
+    const map={
+      '#22d3ee':'7', // טורקיז
+      '#3b82f6':'9', // כחול
+      '#a78bfa':'3', // סגול
+      '#f472b6':'4', // ורוד/אדום
+      '#fb923c':'6', // כתום
+      '#34d399':'2', // ירוק
+      '#f87171':'11',// אדום
+      '#fbbf24':'5', // צהוב
+      '#60a5fa':'1', // כחול כהה
+      '#e879f9':'3', // סגול ורוד
+      '#4ade80':'10',// ירוק כהה
+      '#f97316':'6', // כתום כהה
+    };
+    return map[hexColor]||'1';
+  },
+
+  async addEvent(apptData, apptSid){
     if(!gcalToken){return;}
     const name = apptData.type==='group'
       ? `👥 ${apptData.groupName||'קבוצה'}`
@@ -1140,12 +1163,13 @@ window.GCal={
     }
     if(apptData.notes)desc+=`\n${apptData.notes}`;
 
+    const clientColor = apptData.type==='private' ? cColor(apptData.clientId) : '#a78bfa';
     const event={
       summary: name,
       description: desc,
       start:{ dateTime: toISO(startDate), timeZone:'Asia/Jerusalem' },
       end:  { dateTime: toISO(endDate),   timeZone:'Asia/Jerusalem' },
-      colorId: apptData.type==='group'?'3':'1',
+      colorId: apptData.type==='group' ? '3' : this._colorToGcalId(clientColor),
     };
 
     if(apptData.recurring==='weekly')   event.recurrence=['RRULE:FREQ=WEEKLY'];
@@ -1157,7 +1181,14 @@ window.GCal={
         headers:{Authorization:`Bearer ${gcalToken}`,'Content-Type':'application/json'},
         body:JSON.stringify(event)
       });
-      if(res.ok){ toast('📅 נוסף ל-Google Calendar ✓'); }
+      if(res.ok){
+        const gcalEvent = await res.json();
+        // save gcal event id to firebase for later deletion
+        if(gcalEvent.id && apptSid){
+          set(ref(db,`appts/${apptSid}/gcalId`), gcalEvent.id);
+        }
+        toast('📅 נוסף ל-Google Calendar ✓');
+      }
       else if(res.status===401){ gcalToken=null; this._setConnected(false); toast('⚠️ חיבור Google פג — התחבר מחדש'); }
       else { const err=await res.json(); console.warn('GCal error',err); toast('⚠️ שגיאה ב-Google Calendar'); }
     }catch(e){ console.warn('GCal error',e); }
