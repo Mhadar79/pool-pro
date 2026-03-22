@@ -1183,9 +1183,13 @@ window.GCal={
       });
       if(res.ok){
         const gcalEvent = await res.json();
+        console.log('GCal event created:', gcalEvent.id, 'apptSid:', apptSid);
         // save gcal event id to firebase for later deletion
         if(gcalEvent.id && apptSid){
-          set(ref(db,`appts/${apptSid}/gcalId`), gcalEvent.id);
+          await set(ref(db,`appts/${apptSid}/gcalId`), gcalEvent.id);
+          console.log('gcalId saved to Firebase ✅');
+        } else {
+          console.warn('Missing gcalEvent.id or apptSid', gcalEvent.id, apptSid);
         }
         toast('📅 נוסף ל-Google Calendar ✓');
       }
