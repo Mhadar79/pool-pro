@@ -9,6 +9,7 @@
 <title>Pool Pro — בריכה טיפולית</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
 /* ════════ VARIABLES ════════ */
@@ -44,6 +45,8 @@ header{height:var(--hh);background:#0a1628ee;backdrop-filter:blur(18px);
 .hdate span{font-size:.88rem;font-weight:700;display:block}
 .hdate small{font-size:.65rem;color:var(--muted)}
 .hright{display:flex;gap:4px;align-items:center}
+.gcal-btn{color:var(--accent)!important;border-color:var(--accent)!important}
+.gcal-btn.connected{color:var(--green)!important;border-color:var(--green)!important}
 .hbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);
   font-family:'Heebo',sans-serif;font-size:.75rem;padding:4px 8px;
   border-radius:7px;cursor:pointer;transition:all .15s;white-space:nowrap}
@@ -308,6 +311,7 @@ nav{height:var(--nh);background:#0a1628ee;backdrop-filter:blur(18px);
     <button class="nav-arrow" onclick="App.shift(1)">‹</button>
   </div>
   <div class="hright">
+    <button class="hbtn gcal-btn" id="gcalBtn" onclick="GCal.connect()" title="חבר Google Calendar">📅 Google</button>
     <button class="hbtn" onclick="App.goToday()">היום</button>
     <div class="view-sw" id="viewSw">
       <button class="vbtn active" id="vb-day"   onclick="App.setView('day')">יום</button>
@@ -913,6 +917,8 @@ window.Appts={
     }
     const sid=id||push(ref(db,'appts')).key;
     await set(ref(db,`appts/${sid}`),data);
+    // sync to Google Calendar
+    GCal.addEvent(data);
     viewDate=new Date(date+'T12:00:00');
     M.close('mo-appt');App.openPanel('calendar');toast('✅ תור נשמר');
   },
@@ -1084,7 +1090,97 @@ window.M={
 };
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 
+/* ════════ GOOGLE CALENDAR ════════ */
+const GCAL_CLIENT_ID='760190545822-blpbr214irapb42guapdms48u3ok4sf0.apps.googleusercontent.com';
+const GCAL_SCOPES='https://www.googleapis.com/auth/calendar.events';
+let gcalToken=null;
+
+window.GCal={
+  connect(){
+    if(!window.google?.accounts?.oauth2){toast('⏳ Google SDK טוען, נסה שוב');return;}
+    const client=google.accounts.oauth2.initTokenClient({
+      client_id:GCAL_CLIENT_ID,
+      scope:GCAL_SCOPES,
+      callback:(resp)=>{
+        if(resp.error){toast('❌ שגיאת התחברות');return;}
+        gcalToken=resp.access_token;
+        localStorage.setItem('gcal_token',gcalToken);
+        this._setConnected(true);
+        toast('✅ Google Calendar מחובר!');
+      }
+    });
+    client.requestAccessToken();
+  },
+
+  _setConnected(on){
+    const btn=document.getElementById('gcalBtn');
+    if(on){btn.textContent='📅 מחובר ✓';btn.classList.add('connected');}
+    else{btn.textContent='📅 Google';btn.classList.remove('connected');}
+  },
+
+  async addEvent(apptData){
+    if(!gcalToken){return;} // silent — not connected
+    const name = apptData.type==='group'
+      ? `👥 ${apptData.groupName||'קבוצה'}`
+      : `🏊 ${cName(apptData.clientId)}`;
+    const [h,m]=(apptData.time||'09:00').split(':');
+    const startDt=`${apptData.date}T${apptData.time}:00`;
+    const endDate=new Date(`${apptData.date}T${apptData.time}:00`);
+    endDate.setMinutes(endDate.getMinutes()+parseInt(apptData.duration||60));
+    const endDt=endDate.toISOString().slice(0,19);
+
+    // build description
+    let desc=`מטפלת: ${THER[apptData.therapist||'t1']}`;
+    if(apptData.type==='private'){
+      const c=clients[apptData.clientId]||{};
+      if(c.phone)desc+=`\nטלפון: ${c.phone}`;
+      if(c.notes)desc+=`\nהערות: ${c.notes}`;
+    } else {
+      const parts=Object.keys(apptData.participants||{}).map(id=>cName(id)).join(', ');
+      desc+=`\nמשתתפים: ${parts}`;
+    }
+    if(apptData.notes)desc+=`\n${apptData.notes}`;
+
+    const event={
+      summary:name,
+      description:desc,
+      start:{dateTime:startDt,timeZone:'Asia/Jerusalem'},
+      end:{dateTime:endDt,timeZone:'Asia/Jerusalem'},
+      colorId:apptData.type==='group'?'3':'1',
+    };
+
+    // recurrence
+    if(apptData.recurring==='weekly')  event.recurrence=['RRULE:FREQ=WEEKLY'];
+    if(apptData.recurring==='biweekly')event.recurrence=['RRULE:FREQ=WEEKLY;INTERVAL=2'];
+
+    try{
+      const res=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
+        method:'POST',
+        headers:{Authorization:`Bearer ${gcalToken}`,'Content-Type':'application/json'},
+        body:JSON.stringify(event)
+      });
+      if(res.ok){toast('📅 נוסף ל-Google Calendar');}
+      else if(res.status===401){gcalToken=null;this._setConnected(false);toast('⚠️ חיבור Google פג — התחבר מחדש');}
+    }catch(e){console.warn('GCal error',e);}
+  },
+
+  async deleteEvent(gcalId){
+    if(!gcalToken||!gcalId)return;
+    try{
+      await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${gcalId}`,{
+        method:'DELETE',headers:{Authorization:`Bearer ${gcalToken}`}
+      });
+    }catch(e){}
+  },
+
+  init(){
+    const saved=localStorage.getItem('gcal_token');
+    if(saved){gcalToken=saved;this._setConnected(true);}
+  }
+};
+
 /* ── INIT ── */
+GCal.init();
 App.setView('day');
 Cal.render();
 </script>
