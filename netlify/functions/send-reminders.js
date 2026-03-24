@@ -11,8 +11,8 @@ exports.handler = async function(event, context) {
     return { statusCode: 200, headers, body: '' };
   }
 
-  const TWILIO_SID   = 'AC6c4991c2c6edfb65a0435e5d9b24395';
-  const TWILIO_TOKEN = 'b4284c11d79f7223c3a4aebf834f72b6';
+  const TWILIO_SID   = process.env.TWILIO_SID;
+  const TWILIO_TOKEN = process.env.TWILIO_TOKEN;
   const TWILIO_FROM  = 'whatsapp:+14155238886';
   const FB_HOST      = 'pool-pro-app-df546-default-rtdb.firebaseio.com';
 
