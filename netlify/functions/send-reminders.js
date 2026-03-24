@@ -14,6 +14,8 @@ exports.handler = async function(event, context) {
   const TWILIO_SID   = process.env.TWILIO_SID;
   const TWILIO_TOKEN = process.env.TWILIO_TOKEN;
   const TWILIO_FROM  = 'whatsapp:+14155238886';
+  console.log('SID exists:', !!TWILIO_SID, 'SID length:', TWILIO_SID?.length);
+  console.log('TOKEN exists:', !!TWILIO_TOKEN, 'TOKEN length:', TWILIO_TOKEN?.length);
   const FB_HOST      = 'pool-pro-app-df546-default-rtdb.firebaseio.com';
 
   try {
