@@ -65,6 +65,7 @@ function sendWA(sid, token, from, phone, message) {
   return new Promise((resolve) => {
     const intl = phone.replace(/[^0-9]/g, '');
     const to   = intl.startsWith('0') ? '972' + intl.slice(1) : intl;
+    console.log('Sending to:', 'whatsapp:+'+to);
     const body = `From=${encodeURIComponent(from)}&To=${encodeURIComponent('whatsapp:+'+to)}&Body=${encodeURIComponent(message)}`;
     const auth = Buffer.from(`${sid}:${token}`).toString('base64');
     const req  = https.request({
@@ -72,8 +73,16 @@ function sendWA(sid, token, from, phone, message) {
       path: `/2010-04-01/Accounts/${sid}/Messages.json`,
       method: 'POST',
       headers: { 'Authorization': `Basic ${auth}`, 'Content-Type': 'application/x-www-form-urlencoded', 'Content-Length': Buffer.byteLength(body) }
-    }, (res) => resolve(res.statusCode >= 200 && res.statusCode < 300));
-    req.on('error', () => resolve(false));
+    }, (res) => {
+      let d = ''; 
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        console.log('Twilio response status:', res.statusCode);
+        console.log('Twilio response body:', d);
+        resolve(res.statusCode >= 200 && res.statusCode < 300);
+      });
+    });
+    req.on('error', (e) => { console.log('Request error:', e.message); resolve(false); });
     req.write(body);
     req.end();
   });
