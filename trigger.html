@@ -1,1 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pool Pro — Auto Reminders</title>
+</head>
+<body>
+<div id="log" style="font-family:monospace;padding:20px;background:#111;color:#0f0;min-height:100vh"></div>
 
+<script type="module">
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const fb = initializeApp({
+  apiKey:            "AIzaSyAwjNkqhgRNzXIhNakOuPLlDLxAq82fruE",
+  authDomain:        "pool-pro-app-df546.firebaseapp.com",
+  databaseURL:       "https://pool-pro-app-df546-default-rtdb.firebaseio.com",
+  projectId:         "pool-pro-app-df546",
+  storageBucket:     "pool-pro-app-df546.firebasestorage.app",
+  messagingSenderId: "30350309720",
+  appId:             "1:30350309720:web:3cc94d0dc437a430720d2d"
+});
+const db = getDatabase(fb);
+
+const TWILIO_SID   = 'AC6c4991c2c6edfb65a0435e5d9b24395';
+const TWILIO_TOKEN = 'b4284c11d79f7223c3a4aebf834f72b6';
+const TWILIO_FROM  = 'whatsapp:+14155238886';
+
+function log(msg) {
+  const el = document.getElementById('log');
+  el.innerHTML += `[${new Date().toLocaleTimeString('he-IL')}] ${msg}<br>`;
+  console.log(msg);
+}
+
+function iso(d) { return d.toISOString().slice(0,10); }
+
+function getTomorrow() {
+  const d = new Date();
+  d.setDate(d.getDate()+1);
+  return iso(d);
+}
+
+function getAppts(appts, dateStr) {
+  const list = [];
+  Object.entries(appts).forEach(([id,a]) => {
+    if (!a) return;
+    if (a.date === dateStr) { list.push({...a,id}); return; }
+    if (a.recurring==='weekly') {
+      const diff = Math.round((new Date(dateStr)-new Date(a.date))/86400000);
+      if (diff>0 && diff%7===0) list.push({...a,id});
+    }
+    if (a.recurring==='biweekly') {
+      const diff = Math.round((new Date(dateStr)-new Date(a.date))/86400000);
+      if (diff>0 && diff%14===0) list.push({...a,id});
+    }
+  });
+  return list;
+}
+
+async function sendWhatsApp(phone, message) {
+  const intl = phone.replace(/[^0-9]/g,'');
+  const to   = intl.startsWith('0') ? '972'+intl.slice(1) : intl;
+
+  const body = new URLSearchParams({
+    From: TWILIO_FROM,
+    To:   `whatsapp:+${to}`,
+    Body: message,
+  });
+
+  const res = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`,
+    {
+      method:  'POST',
+      headers: {
+        Authorization: 'Basic ' + btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    }
+  );
+  return res.ok;
+}
+
+async function run() {
+  log('🚀 מתחיל שליחת תזכורות...');
+
+  // קרא נתונים מ-Firebase
+  const [apptsSnap, clientsSnap] = await Promise.all([
+    get(ref(db,'appts')),
+    get(ref(db,'clients'))
+  ]);
+
+  const appts   = apptsSnap.val()  || {};
+  const clients = clientsSnap.val() || {};
+  const tomorrow = getTomorrow();
+
+  log(`📅 תאריך מחר: ${tomorrow}`);
+
+  const dayAppts = getAppts(appts, tomorrow);
+  log(`📋 נמצאו ${dayAppts.length} תורים מחר`);
+
+  if (!dayAppts.length) {
+    log('✅ אין תורים מחר — לא נשלחו הודעות');
+    return;
+  }
+
+  let sent=0, skipped=0, failed=0;
+
+  for (const a of dayAppts) {
+    if (a.type === 'private') {
+      const client = clients[a.clientId];
+      if (!client?.phone) { skipped++; log(`⚠️ אין טלפון ל-${client?.first||a.clientId}`); continue; }
+
+      const msg = `שלום ${client.first||''} 😊\nתזכורת לתור שלך מחר (${tomorrow}) בשעה ${a.time}.\n\nענה *1* לאישור ✅\nענה *2* לביטול ❌`;
+
+      log(`📱 שולח ל-${client.first} (${client.phone})...`);
+      const ok = await sendWhatsApp(client.phone, msg);
+
+      if (ok) {
+        sent++;
+        await set(ref(db,`statuses/${a.id}_${tomorrow}`), 'sent');
+        log(`✅ נשלח ל-${client.first}`);
+      } else {
+        failed++;
+        log(`❌ נכשל עבור ${client.first}`);
+      }
+
+    } else if (a.type === 'group') {
+      const parts = Object.keys(a.participants||{});
+      for (const cId of parts) {
+        const client = clients[cId];
+        if (!client?.phone) { skipped++; continue; }
+
+        const msg = `שלום ${client.first||''} 😊\nתזכורת לשיעור "${a.groupName||'קבוצה'}" מחר (${tomorrow}) בשעה ${a.time}.\n\nענה *1* לאישור ✅\nענה *2* לביטול ❌`;
+
+        log(`📱 שולח ל-${client.first} (קבוצה: ${a.groupName})...`);
+        const ok = await sendWhatsApp(client.phone, msg);
+
+        if (ok) {
+          sent++;
+          await set(ref(db,`statuses/${a.id}_${cId}_${tomorrow}`), 'sent');
+          log(`✅ נשלח ל-${client.first}`);
+        } else {
+          failed++;
+          log(`❌ נכשל עבור ${client.first}`);
+        }
+      }
+    }
+  }
+
+  log(`\n📊 סיכום:`);
+  log(`✅ נשלחו: ${sent}`);
+  log(`⚠️ ללא טלפון: ${skipped}`);
+  log(`❌ נכשלו: ${failed}`);
+}
+
+run().catch(e => log('❌ שגיאה: '+e.message));
+</script>
+</body>
+</html>
