@@ -11,11 +11,11 @@ exports.handler = async function(event, context) {
     return { statusCode: 200, headers, body: '' };
   }
 
-  const TWILIO_SID   = process.env.TWILIO_SID;
-  const TWILIO_TOKEN = process.env.TWILIO_TOKEN;
+  const TWILIO_SID   = process.env.TWILIO_SID   || 'AC6c4991c2c6edfb65a0435e5d9b243957';
+  const TWILIO_TOKEN = process.env.TWILIO_TOKEN || 'b4284c11d79f7223c3a4aebf834f72b6';
   const TWILIO_FROM  = 'whatsapp:+14155238886';
-  console.log('SID exists:', !!TWILIO_SID, 'SID length:', TWILIO_SID?.length);
-  console.log('TOKEN exists:', !!TWILIO_TOKEN, 'TOKEN length:', TWILIO_TOKEN?.length);
+  console.log('SID first 10:', TWILIO_SID?.slice(0,10));
+  console.log('TOKEN first 10:', TWILIO_TOKEN?.slice(0,10));
   const FB_HOST      = 'pool-pro-app-df546-default-rtdb.firebaseio.com';
 
   try {
