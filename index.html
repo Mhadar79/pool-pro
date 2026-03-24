@@ -1,1222 +1,160 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Pool Pro">
-<meta name="theme-color" content="#0a1628">
-<title>Pool Pro — בריכה טיפולית</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-
-<style>
-/* ════════ VARIABLES ════════ */
-:root {
-  --bg:#0a1628;--bg2:#0e1e35;--card:#132040;--card2:#1a2d50;
-  --border:#1e3558;--accent:#22d3ee;--accent2:#3b82f6;
-  --text:#e0f2fe;--muted:#4d7a9e;--green:#10b981;--red:#f43f5e;
-  --yellow:#f59e0b;--wa:#25D366;--r:12px;--hh:54px;--nh:60px;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-html,body{height:100%;overflow:hidden}
-body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);
-  display:flex;flex-direction:column;direction:rtl}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse 50% 35% at 15% 8%,#3b82f614 0%,transparent 55%),
-             radial-gradient(ellipse 35% 50% at 85% 92%,#22d3ee0d 0%,transparent 55%)}
-
-/* ════════ HEADER ════════ */
-header{height:var(--hh);background:#0a1628ee;backdrop-filter:blur(18px);
-  border-bottom:1px solid var(--border);display:flex;align-items:center;
-  padding:0 10px;gap:6px;position:relative;z-index:100;flex-shrink:0}
-.logo{font-size:1.05rem;font-weight:800;
-  background:linear-gradient(135deg,var(--accent2),var(--accent));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
-.logo span{font-weight:300}
-.sync{font-size:.65rem;flex-shrink:0}
-.hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:4px}
-.nav-arrow{width:28px;height:28px;border-radius:7px;background:var(--card);
-  border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
-.nav-arrow:hover{border-color:var(--accent);color:var(--accent)}
-.hdate{text-align:center;cursor:pointer;user-select:none;min-width:100px}
-.hdate span{font-size:.88rem;font-weight:700;display:block}
-.hdate small{font-size:.65rem;color:var(--muted)}
-.hright{display:flex;gap:4px;align-items:center}
-.gcal-btn{color:var(--accent)!important;border-color:var(--accent)!important}
-.gcal-btn.connected{color:var(--green)!important;border-color:var(--green)!important}
-.hbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);
-  font-family:'Heebo',sans-serif;font-size:.75rem;padding:4px 8px;
-  border-radius:7px;cursor:pointer;transition:all .15s;white-space:nowrap}
-.hbtn:hover{color:var(--text);border-color:var(--accent)}
-.view-sw{display:flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
-.vbtn{background:none;border:none;color:var(--muted);font-family:'Heebo',sans-serif;
-  font-size:.72rem;font-weight:600;padding:5px 8px;cursor:pointer;transition:all .15s;white-space:nowrap}
-.vbtn.active{background:var(--accent2);color:#fff}
-
-/* ════════ MAIN ════════ */
-#mainArea{flex:1;overflow:hidden;position:relative;z-index:10;display:flex;flex-direction:column}
-.panel{display:none;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.panel.active{display:flex;flex-direction:column}
-
-/* ════════ NAV ════════ */
-nav{height:var(--nh);background:#0a1628ee;backdrop-filter:blur(18px);
-  border-top:1px solid var(--border);display:flex;flex-shrink:0;z-index:100}
-.ntab{flex:1;background:none;border:none;color:var(--muted);font-family:'Heebo',sans-serif;
-  font-size:.7rem;font-weight:500;padding:8px 4px 6px;cursor:pointer;transition:all .18s;
-  display:flex;flex-direction:column;align-items:center;gap:2px}
-.ntab span{font-size:1.2rem}
-.ntab.active{color:var(--accent)}
-
-/* ════════ FAB ════════ */
-.fab{position:fixed;left:16px;bottom:calc(var(--nh)+12px);width:48px;height:48px;
-  border-radius:50%;background:linear-gradient(135deg,var(--accent2),var(--accent));
-  border:none;font-size:1.4rem;color:#fff;box-shadow:0 4px 16px #3b82f655;
-  cursor:pointer;z-index:90;display:flex;align-items:center;justify-content:center;
-  transition:transform .2s}
-.fab:hover{transform:scale(1.08) rotate(90deg)}
-
-/* ════════ DAY HOURLY GRID ════════ */
-.day-hour-row{display:flex;gap:0;min-height:52px;border-bottom:1px solid #1e355833;
-  transition:background .12s}
-.day-hour-row:hover{background:#22d3ee06}
-.day-hour-lbl{width:42px;flex-shrink:0;font-size:.62rem;color:var(--muted);
-  padding:4px 6px 0 0;text-align:left;align-self:flex-start;padding-top:6px}
-.day-hour-slots{flex:1;padding:4px 6px;display:flex;flex-direction:column;gap:5px}
-.hour-empty{width:100%;padding:8px 12px;border-radius:7px;font-size:.75rem;
-  color:var(--muted);border:1px dashed var(--border);text-align:center;
-  cursor:pointer;transition:all .15s;background:transparent}
-.hour-empty:hover{background:#22d3ee10;border-color:var(--accent);color:var(--accent)}
-
-/* ════════ DAY VIEW ════════ */
-#dayGrid{padding:12px;display:flex;flex-direction:column;gap:7px}
-.appt-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
-  padding:11px 12px 11px 16px;position:relative;overflow:hidden;cursor:pointer;
-  transition:transform .15s,border-color .15s;animation:fadeUp .22s ease both}
-.appt-card:active{transform:scale(.99)}
-.appt-card .cbar{position:absolute;right:0;top:0;bottom:0;width:4px}
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
-.card-title{font-size:.88rem;font-weight:700;flex:1}
-.card-time-lbl{font-size:.72rem;color:var(--muted);white-space:nowrap}
-.card-meta{font-size:.72rem;color:var(--muted);margin-top:3px}
-.card-badges{display:flex;gap:4px;flex-wrap:wrap;margin-top:5px}
-.card-actions{position:absolute;left:6px;top:50%;transform:translateY(-50%);
-  display:flex;flex-direction:column;gap:4px}
-.ibtn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);
-  background:var(--card2);font-size:.75rem;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .15s}
-.ibtn:hover{transform:scale(1.12)}
-.ibtn.wa:hover{background:#25D36622;border-color:var(--wa)}
-.ibtn.chk.ok{background:#10b98120;border-color:var(--green);color:var(--green)}
-.ibtn.chk.no{background:#f43f5e20;border-color:var(--red);color:var(--red)}
-.group-expand{margin-top:9px;padding-top:9px;border-top:1px solid var(--border);display:none}
-.group-expand.open{display:block}
-.p-row{display:flex;align-items:center;gap:7px;padding:4px 0}
-.p-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.p-name{font-size:.78rem;flex:1}
-.empty-day{text-align:center;padding:52px 24px;color:var(--muted)}
-.empty-day .icon{font-size:2.8rem;margin-bottom:10px}
-
-/* ════════ WEEK VIEW ════════ */
-#weekContainer{display:flex;flex-direction:column;flex:1}
-.week-header{display:grid;grid-template-columns:38px repeat(7,1fr);
-  border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
-.week-day-hdr{padding:6px 2px;text-align:center;font-size:.68rem;border-right:1px solid var(--border)}
-.week-day-hdr .wd-name{color:var(--muted);display:block}
-.week-day-hdr .wd-num{font-size:.85rem;font-weight:700;display:block;margin-top:1px}
-.week-day-hdr.today .wd-num{color:var(--accent);background:#22d3ee22;border-radius:50%;
-  width:24px;height:24px;line-height:24px;margin:1px auto 0}
-.week-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.week-grid{display:grid;grid-template-columns:38px repeat(7,1fr);position:relative}
-.week-time-col{display:flex;flex-direction:column}
-.week-time-slot{height:52px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;
-  padding-top:2px;padding-right:4px;font-size:.6rem;color:var(--muted)}
-.week-day-col{border-right:1px solid var(--border);position:relative;min-height:100%}
-.week-hour-line{height:52px;border-bottom:1px solid #1e355844}
-.week-appt-block{position:absolute;right:1px;left:1px;border-radius:5px;padding:2px 4px;
-  font-size:.65rem;font-weight:700;overflow:hidden;cursor:pointer;border:none;
-  line-height:1.3;text-align:right;transition:opacity .15s}
-.week-appt-block:hover{opacity:.85}
-
-/* ════════ MONTH VIEW ════════ */
-#monthContainer{display:flex;flex-direction:column;flex:1}
-.month-hdr{display:grid;grid-template-columns:repeat(7,1fr);
-  border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0}
-.month-day-name{padding:6px 2px;text-align:center;font-size:.65rem;color:var(--muted);
-  border-right:1px solid var(--border)}
-.month-grid{display:grid;grid-template-columns:repeat(7,1fr);flex:1;align-content:start}
-.month-cell{border-right:1px solid var(--border);border-bottom:1px solid var(--border);
-  min-height:72px;padding:4px;cursor:pointer;transition:background .15s;position:relative}
-.month-cell:hover{background:var(--card2)}
-.month-cell.today{background:#22d3ee0a}
-.month-cell.other-month .mcell-num{color:var(--muted);opacity:.4}
-.mcell-num{font-size:.75rem;font-weight:700;margin-bottom:3px;
-  width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%}
-.month-cell.today .mcell-num{background:var(--accent);color:var(--bg);font-weight:900}
-.mcell-appt{font-size:.6rem;padding:1px 4px;border-radius:3px;margin-bottom:2px;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;cursor:pointer}
-.mcell-more{font-size:.6rem;color:var(--muted);padding-right:2px}
-
-/* ════════ BADGES ════════ */
-.badge{font-size:.6rem;font-weight:700;padding:2px 6px;border-radius:20px;
-  display:inline-flex;align-items:center;gap:2px}
-.b-ok{background:#10b98118;color:var(--green)}
-.b-no{background:#f43f5e18;color:var(--red)}
-.b-wait{background:#f59e0b18;color:var(--yellow)}
-.b-rec{background:#3b82f618;color:var(--accent2)}
-.b-grp{background:#8b5cf618;color:#a78bfa}
-.b-prv{background:#22d3ee18;color:var(--accent)}
-.b-warn{background:#f59e0b18;color:var(--yellow)}
-
-/* ════════ CLIENTS PANEL ════════ */
-#panel-clients{padding:12px}
-.panel-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.panel-hdr h2{font-size:.95rem;font-weight:800}
-.search-wrap{margin-bottom:11px}
-.search-wrap input{width:100%;background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r);padding:9px 12px;color:var(--text);
-  font-family:'Heebo',sans-serif;font-size:.85rem;outline:none;transition:border-color .15s}
-.search-wrap input:focus{border-color:var(--accent2)}
-.client-row{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
-  padding:12px 13px;display:flex;align-items:center;gap:11px;margin-bottom:7px;
-  cursor:pointer;transition:border-color .15s;animation:fadeUp .2s ease both}
-.client-row:hover{border-color:var(--accent2)}
-.cavatar{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-size:.95rem;font-weight:800;color:#fff;flex-shrink:0}
-.cinfo{flex:1;min-width:0}
-.cname{font-size:.88rem;font-weight:700}
-.csub{font-size:.7rem;color:var(--muted);margin-top:1px}
-
-/* ════════ REPORTS PANEL ════════ */
-#panel-reports{padding:12px;overflow-y:auto}
-.report-tabs{display:flex;gap:5px;margin-bottom:12px}
-.rtab{background:var(--card);border:1px solid var(--border);color:var(--muted);
-  font-family:'Heebo',sans-serif;font-size:.78rem;padding:6px 12px;border-radius:8px;cursor:pointer}
-.rtab.active{background:var(--card2);color:var(--accent);border-color:var(--accent)}
-.stats-row{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:14px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
-  padding:12px;text-align:center}
-.stat-card .n{font-size:1.7rem;font-weight:900;line-height:1;
-  background:linear-gradient(135deg,var(--accent2),var(--accent));
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.stat-card .l{font-size:.68rem;color:var(--muted);margin-top:3px}
-.report-item{background:var(--card);border:1px solid var(--border);border-radius:var(--r);
-  padding:10px 12px;display:flex;align-items:center;gap:9px;margin-bottom:6px}
-.ri-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-.ri-info{flex:1}
-.ri-info strong{font-size:.83rem;display:block}
-.ri-info span{font-size:.7rem;color:var(--muted)}
-.ri-st{font-size:.7rem;font-weight:700}
-.ri-wa{font-size:.95rem;cursor:pointer}
-.rdrow{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-.rdrow label{font-size:.78rem;color:var(--muted)}
-.rdrow input{background:var(--card);border:1px solid var(--border);color:var(--text);
-  font-family:'Heebo',sans-serif;font-size:.8rem;padding:6px 9px;border-radius:8px;outline:none}
-.cselect{background:var(--card);border:1px solid var(--border);color:var(--text);
-  font-family:'Heebo',sans-serif;font-size:.88rem;padding:8px 11px;
-  border-radius:9px;width:100%;outline:none;margin-bottom:12px}
-
-/* ════════ MODALS ════════ */
-.overlay{display:none;position:fixed;inset:0;background:#000b;z-index:300;
-  align-items:flex-end;justify-content:center}
-.overlay.open{display:flex}
-.modal{background:var(--bg2);border:1px solid var(--border);border-radius:20px 20px 0 0;
-  padding:6px 16px 28px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;
-  animation:slideUp .22s ease}
-@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
-@keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
-.mhandle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:10px auto 12px}
-.mhdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.mhdr h3{font-size:.95rem;font-weight:800}
-.mclose{width:26px;height:26px;border-radius:6px;background:var(--card);
-  border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:.8rem;
-  display:flex;align-items:center;justify-content:center}
-.ftabs{display:flex;gap:5px;margin-bottom:12px}
-.ftab{flex:1;background:var(--card);border:1px solid var(--border);color:var(--muted);
-  font-family:'Heebo',sans-serif;font-size:.82rem;padding:8px;border-radius:8px;
-  cursor:pointer;font-weight:600;transition:all .15s}
-.ftab.active{background:var(--card2);color:var(--accent);border-color:var(--accent)}
-.field{margin-bottom:11px}
-.field label{display:block;font-size:.73rem;color:var(--muted);margin-bottom:4px;font-weight:500}
-.field input,.field select,.field textarea{width:100%;background:var(--card);
-  border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);
-  font-family:'Heebo',sans-serif;font-size:.85rem;outline:none;transition:border-color .15s}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent2)}
-.field select option{background:var(--card)}
-.field textarea{resize:vertical;min-height:60px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.color-picker{display:flex;gap:7px;flex-wrap:wrap;padding:3px 0}
-.cswatch{width:24px;height:24px;border-radius:50%;cursor:pointer;
-  border:2px solid transparent;transition:all .15s}
-.cswatch.sel{border-color:#fff;transform:scale(1.2)}
-.btn-full{width:100%;padding:11px;background:linear-gradient(135deg,var(--accent2),var(--accent));
-  border:none;border-radius:9px;color:#fff;font-family:'Heebo',sans-serif;
-  font-size:.9rem;font-weight:700;cursor:pointer;transition:all .15s}
-.btn-full:hover{transform:translateY(-1px);box-shadow:0 4px 16px #3b82f644}
-.btn-full.danger{background:linear-gradient(135deg,#f43f5e,#fb7185)}
-.btn-cancel{width:100%;padding:10px;margin-top:7px;background:var(--card);
-  border:1px solid var(--border);color:var(--muted);font-family:'Heebo',sans-serif;
-  font-size:.85rem;border-radius:9px;cursor:pointer}
-.btn-primary{background:linear-gradient(135deg,var(--accent2),var(--accent));
-  border:none;color:#fff;font-family:'Heebo',sans-serif;font-weight:700;
-  cursor:pointer;border-radius:7px;transition:all .15s}
-.btn-sm{font-size:.75rem;padding:6px 12px}
-.btn-ghost{background:var(--card);border:1px solid var(--border);color:var(--muted);
-  font-family:'Heebo',sans-serif;cursor:pointer;border-radius:7px;transition:all .15s}
-.btn-ghost:hover{color:var(--text)}
-.p-row-form{display:flex;align-items:center;gap:7px;margin-bottom:6px}
-.p-row-form select{flex:1}
-.p-del{background:none;border:none;color:var(--red);cursor:pointer;font-size:.95rem;padding:3px}
-.conflict-warn{background:#f59e0b15;border:1px solid #f59e0b55;border-radius:8px;
-  padding:9px 12px;font-size:.78rem;color:var(--yellow);margin-bottom:10px}
-.detail-hdr{display:flex;align-items:center;gap:10px;padding:8px 0 12px}
-.davatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-size:1.1rem;font-weight:800;color:#fff;flex-shrink:0}
-.dtitle{font-size:1rem;font-weight:800}
-.dsub{font-size:.75rem;color:var(--muted);margin-top:2px}
-.dsec{margin-bottom:13px}
-.dsec h4{font-size:.72rem;color:var(--muted);font-weight:600;margin-bottom:7px;
-  text-transform:uppercase;letter-spacing:.05em}
-.dactions{display:flex;gap:7px;margin-top:12px}
-.dactions button{flex:1}
-
-/* scrollbar */
-::-webkit-scrollbar{width:3px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
-/* toast */
-#toast{position:fixed;bottom:calc(var(--nh)+10px);left:50%;
-  transform:translateX(-50%) translateY(12px);background:var(--card2);
-  border:1px solid var(--border);color:var(--text);padding:8px 16px;
-  border-radius:22px;font-size:.8rem;z-index:500;opacity:0;pointer-events:none;
-  transition:all .25s;white-space:nowrap;box-shadow:0 5px 18px #0009}
-#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-</style>
+<title>Pool Pro — Auto Reminders</title>
 </head>
 <body>
-
-<!-- HEADER -->
-<header>
-  <div class="logo">🌊 <span>Pool</span>Pro</div>
-  <div class="sync" id="sync">⏳</div>
-  <div class="hcenter" id="hcenter">
-    <button class="nav-arrow" onclick="App.shift(-1)">›</button>
-    <div class="hdate" onclick="App.pickDate()">
-      <span id="hTitle"></span>
-      <small id="hSub"></small>
-    </div>
-    <button class="nav-arrow" onclick="App.shift(1)">‹</button>
-  </div>
-  <div class="hright">
-    <button class="hbtn gcal-btn" id="gcalBtn" onclick="GCal.connect()" title="חבר Google Calendar">📅 Google</button>
-    <button class="hbtn" onclick="App.goToday()">היום</button>
-    <div class="view-sw" id="viewSw">
-      <button class="vbtn active" id="vb-day"   onclick="App.setView('day')">יום</button>
-      <button class="vbtn"        id="vb-week"  onclick="App.setView('week')">שבוע</button>
-      <button class="vbtn"        id="vb-month" onclick="App.setView('month')">חודש</button>
-    </div>
-  </div>
-</header>
-
-<!-- MAIN -->
-<div id="mainArea">
-
-  <!-- CALENDAR -->
-  <div class="panel active" id="panel-calendar">
-    <!-- day -->
-    <div id="dayView">
-      <div id="dayGrid"></div>
-    </div>
-    <!-- week -->
-    <div id="weekView" style="display:none;flex:1;display:none;flex-direction:column">
-      <div id="weekContainer"></div>
-    </div>
-    <!-- month -->
-    <div id="monthView" style="display:none">
-      <div id="monthContainer"></div>
-    </div>
-  </div>
-
-  <!-- CLIENTS -->
-  <div class="panel" id="panel-clients">
-    <div class="panel-hdr">
-      <h2>👤 לקוחות</h2>
-      <button class="btn-primary btn-sm" onclick="Clients.openAdd()">+ חדש</button>
-    </div>
-    <div class="search-wrap">
-      <input type="search" id="clientSearch" placeholder="🔍 חיפוש..." oninput="Clients.render()">
-    </div>
-    <div id="clientsList"></div>
-  </div>
-
-  <!-- REPORTS -->
-  <div class="panel" id="panel-reports">
-    <div class="report-tabs">
-      <button class="rtab active" onclick="Reports.sw('daily',this)">יומי</button>
-      <button class="rtab" onclick="Reports.sw('client',this)">לקוח</button>
-      <button class="rtab" onclick="Reports.sw('monthly',this)">חודשי</button>
-    </div>
-    <div id="reportContent"></div>
-  </div>
-
-</div>
-
-<!-- NAV -->
-<nav>
-  <button class="ntab active" id="nt-calendar" onclick="App.openPanel('calendar')"><span>📅</span><small>יומן</small></button>
-  <button class="ntab" id="nt-clients" onclick="App.openPanel('clients')"><span>👤</span><small>לקוחות</small></button>
-  <button class="ntab" id="nt-reports" onclick="App.openPanel('reports')"><span>📊</span><small>דוחות</small></button>
-</nav>
-
-<button class="fab" id="fab" onclick="Appts.openAdd()">+</button>
-<input type="date" id="dpick" style="position:fixed;opacity:0;pointer-events:none" onchange="App.fromPicker(this.value)">
-<div id="toast"></div>
-
-<!-- ══ MODALS ══ -->
-<div class="overlay" id="mo-appt">
-  <div class="modal">
-    <div class="mhandle"></div>
-    <div class="mhdr"><h3 id="apptTitle">תור חדש</h3><button class="mclose" onclick="M.close('mo-appt')">✕</button></div>
-    <div class="ftabs">
-      <button class="ftab active" id="ft-prv" onclick="Appts.switchType('private')">🏊 פרטני</button>
-      <button class="ftab" id="ft-grp" onclick="Appts.switchType('group')">👥 קבוצתי</button>
-    </div>
-    <input type="hidden" id="aId"><input type="hidden" id="aType" value="private">
-    <div id="fPrivate">
-      <div class="field"><label>לקוח *</label><select id="aClient"><option value="">-- בחר --</option></select></div>
-    </div>
-    <div id="fGroup" style="display:none">
-      <div class="field"><label>שם שיעור / קבוצה *</label><input type="text" id="aGName" placeholder="אקווה ג׳ים"></div>
-      <div class="field"><label>משתתפים</label><div id="gParts"></div>
-        <button class="btn-ghost btn-sm" style="margin-top:7px" onclick="Appts.addPart()">+ הוסף משתתף</button></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>תאריך *</label><input type="date" id="aDate"></div>
-      <div class="field"><label>שעה *</label><input type="time" id="aTime" value="09:00"></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>משך</label>
-        <select id="aDur"><option value="30">30 דק׳</option><option value="45">45 דק׳</option>
-          <option value="60" selected>60 דק׳</option><option value="90">90 דק׳</option></select></div>
-      <div class="field"><label>מטפלת</label>
-        <select id="aTherapist"><option value="t1">מטפלת א׳</option><option value="t2">מטפלת ב׳</option></select></div>
-    </div>
-    <div class="field"><label>חזרה</label>
-      <select id="aRec"><option value="none">חד פעמי</option><option value="weekly">שבועי</option><option value="biweekly">דו שבועי</option></select></div>
-    <div class="field"><label>הערות</label><input type="text" id="aNotes" placeholder="הערה..."></div>
-    <div id="conflictWarn" class="conflict-warn" style="display:none">⚠️ <span id="conflictMsg"></span></div>
-    <button class="btn-full" onclick="Appts.save()">💾 שמור תור</button>
-    <button class="btn-full danger" id="delApptBtn" onclick="Appts.del()" style="display:none;margin-top:7px">🗑️ מחק תור</button>
-    <button class="btn-cancel" onclick="M.close('mo-appt')">ביטול</button>
-  </div>
-</div>
-
-<div class="overlay" id="mo-client">
-  <div class="modal">
-    <div class="mhandle"></div>
-    <div class="mhdr"><h3 id="clientTitle">לקוח חדש</h3><button class="mclose" onclick="M.close('mo-client')">✕</button></div>
-    <input type="hidden" id="cId">
-    <div class="row2">
-      <div class="field"><label>שם פרטי *</label><input type="text" id="cFirst" placeholder="ישראל"></div>
-      <div class="field"><label>שם משפחה</label><input type="text" id="cLast" placeholder="ישראלי"></div>
-    </div>
-    <div class="row2">
-      <div class="field"><label>טלפון</label><input type="tel" id="cPhone" placeholder="050-0000000"></div>
-      <div class="field"><label>גיל</label><input type="number" id="cAge" placeholder="45" min="1" max="120"></div>
-    </div>
-    <div class="field"><label>אבחנה / הערות</label><textarea id="cNotes" placeholder="פרטים רלוונטיים..."></textarea></div>
-    <div class="field"><label>צבע ביומן</label><div id="colorPicker" class="color-picker"></div></div>
-    <button class="btn-full" onclick="Clients.save()">💾 שמור לקוח</button>
-    <button class="btn-full danger" id="delClientBtn" onclick="Clients.del()" style="display:none;margin-top:7px">🗑️ מחק</button>
-    <button class="btn-cancel" onclick="M.close('mo-client')">ביטול</button>
-  </div>
-</div>
-
-<div class="overlay" id="mo-detail">
-  <div class="modal">
-    <div class="mhandle"></div>
-    <div id="detailBody"></div>
-    <button class="btn-cancel" onclick="M.close('mo-detail')">סגור</button>
-  </div>
-</div>
+<div id="log" style="font-family:monospace;padding:20px;background:#111;color:#0f0;min-height:100vh"></div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase,ref,set,onValue,remove,push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const fb = initializeApp({
-  apiKey:"AIzaSyAwjNkqhgRNzXIhNakOuPLlDLxAq82fruE",
-  authDomain:"pool-pro-app-df546.firebaseapp.com",
-  databaseURL:"https://pool-pro-app-df546-default-rtdb.firebaseio.com",
-  projectId:"pool-pro-app-df546",
-  storageBucket:"pool-pro-app-df546.firebasestorage.app",
-  messagingSenderId:"30350309720",
-  appId:"1:30350309720:web:3cc94d0dc437a430720d2d"
+  apiKey:            "AIzaSyAwjNkqhgRNzXIhNakOuPLlDLxAq82fruE",
+  authDomain:        "pool-pro-app-df546.firebaseapp.com",
+  databaseURL:       "https://pool-pro-app-df546-default-rtdb.firebaseio.com",
+  projectId:         "pool-pro-app-df546",
+  storageBucket:     "pool-pro-app-df546.firebasestorage.app",
+  messagingSenderId: "30350309720",
+  appId:             "1:30350309720:web:3cc94d0dc437a430720d2d"
 });
 const db = getDatabase(fb);
 
-/* ── STATE ── */
-const COLORS=['#22d3ee','#3b82f6','#a78bfa','#f472b6','#fb923c','#34d399','#f87171','#fbbf24','#60a5fa','#e879f9','#4ade80','#f97316'];
-const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
-const DAYS_S=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
-const MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
-const THER={t1:'מטפלת א׳',t2:'מטפלת ב׳'};
-let clients={},appts={},statuses={};
-let viewDate=new Date(), curView='day', selColor=COLORS[0];
-let _partCount=0, _toastTimer;
+const TWILIO_SID   = 'AC6c4991c2c6edfb65a0435e5d9b24395';
+const TWILIO_TOKEN = 'b4284c11d79f7223c3a4aebf834f72b6';
+const TWILIO_FROM  = 'whatsapp:+14155238886';
 
-/* ── FIREBASE ── */
-onValue(ref(db,'clients'), s=>{clients=s.val()||{};Cal.render();Clients.render();Reports.refresh();});
-onValue(ref(db,'appts'),   s=>{appts=s.val()||{};Cal.render();Reports.refresh();});
-onValue(ref(db,'statuses'),s=>{statuses=s.val()||{};Cal.render();Reports.refresh();});
-document.getElementById('sync').textContent='🟢';
+function log(msg) {
+  const el = document.getElementById('log');
+  el.innerHTML += `[${new Date().toLocaleTimeString('he-IL')}] ${msg}<br>`;
+  console.log(msg);
+}
 
-/* ── HELPERS ── */
-function iso(d){return d.toISOString().slice(0,10)}
-function toast(msg,dur=2600){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  clearTimeout(_toastTimer);_toastTimer=setTimeout(()=>t.classList.remove('show'),dur);
+function iso(d) { return d.toISOString().slice(0,10); }
+
+function getTomorrow() {
+  const d = new Date();
+  d.setDate(d.getDate()+1);
+  return iso(d);
 }
-function cName(id){const c=clients[id];if(!c)return'—';return`${c.first||''} ${c.last||''}`.trim()||'—'}
-function cColor(id){return(clients[id]||{}).color||'#22d3ee'}
-function cPhone(id){return((clients[id]||{}).phone||'').replace(/[^0-9]/g,'')}
-function waUrl(cId,a){
-  const ph=cPhone(cId);if(!ph)return'';
-  const intl=ph.startsWith('0')?'972'+ph.slice(1):ph;
-  const msg=encodeURIComponent(`שלום ${cName(cId)} 😊\nתזכורת לתור שלך ב-${a.date} בשעה ${a.time}.\nנשמח לראותך! 🌊`);
-  return`https://wa.me/${intl}?text=${msg}`;
-}
-function getAppts(dateStr){
-  const list=[];
-  Object.entries(appts).forEach(([id,a])=>{
-    if(!a)return;
-    if(a.date===dateStr){list.push({...a,id});return}
-    if(a.recurring==='weekly'){const d=Math.round((new Date(dateStr)-new Date(a.date))/86400000);if(d>0&&d%7===0)list.push({...a,id,rec:true})}
-    if(a.recurring==='biweekly'){const d=Math.round((new Date(dateStr)-new Date(a.date))/86400000);if(d>0&&d%14===0)list.push({...a,id,rec:true})}
+
+function getAppts(appts, dateStr) {
+  const list = [];
+  Object.entries(appts).forEach(([id,a]) => {
+    if (!a) return;
+    if (a.date === dateStr) { list.push({...a,id}); return; }
+    if (a.recurring==='weekly') {
+      const diff = Math.round((new Date(dateStr)-new Date(a.date))/86400000);
+      if (diff>0 && diff%7===0) list.push({...a,id});
+    }
+    if (a.recurring==='biweekly') {
+      const diff = Math.round((new Date(dateStr)-new Date(a.date))/86400000);
+      if (diff>0 && diff%14===0) list.push({...a,id});
+    }
   });
-  return list.sort((a,b)=>a.time>b.time?1:-1);
+  return list;
 }
-function startOfWeek(d){const r=new Date(d);r.setDate(d.getDate()-d.getDay());return r}
 
-/* ════════ APP ════════ */
-window.App={
-  setView(v){
-    curView=v;
-    ['day','week','month'].forEach(x=>{
-      document.getElementById(x+'View').style.display=x===v?'':'none';
-      document.getElementById('vb-'+x).classList.toggle('active',x===v);
-    });
-    Cal.render();
-  },
-  shift(d){
-    if(curView==='day')viewDate.setDate(viewDate.getDate()+d);
-    else if(curView==='week')viewDate.setDate(viewDate.getDate()+d*7);
-    else viewDate.setMonth(viewDate.getMonth()+d);
-    Cal.render();
-  },
-  goToday(){viewDate=new Date();Cal.render();},
-  pickDate(){const el=document.getElementById('dpick');el.value=iso(viewDate);el.showPicker?.();el.click();},
-  fromPicker(v){if(v){viewDate=new Date(v+'T12:00:00');Cal.render();}},
-  openPanel(name){
-    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
-    document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('active'));
-    document.getElementById('panel-'+name).classList.add('active');
-    document.getElementById('nt-'+name)?.classList.add('active');
-    const showFab=name==='calendar';
-    document.getElementById('fab').style.display=showFab?'flex':'none';
-    document.getElementById('hcenter').style.display=showFab?'flex':'none';
-    document.getElementById('viewSw').style.display=showFab?'flex':'none';
-    if(name==='reports')Reports.renderDaily();
-    if(name==='clients')Clients.render();
+async function sendWhatsApp(phone, message) {
+  const intl = phone.replace(/[^0-9]/g,'');
+  const to   = intl.startsWith('0') ? '972'+intl.slice(1) : intl;
+
+  const body = new URLSearchParams({
+    From: TWILIO_FROM,
+    To:   `whatsapp:+${to}`,
+    Body: message,
+  });
+
+  const res = await fetch(
+    `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`,
+    {
+      method:  'POST',
+      headers: {
+        Authorization: 'Basic ' + btoa(`${TWILIO_SID}:${TWILIO_TOKEN}`),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      body: body.toString()
+    }
+  );
+  return res.ok;
+}
+
+async function run() {
+  log('🚀 מתחיל שליחת תזכורות...');
+
+  // קרא נתונים מ-Firebase
+  const [apptsSnap, clientsSnap] = await Promise.all([
+    get(ref(db,'appts')),
+    get(ref(db,'clients'))
+  ]);
+
+  const appts   = apptsSnap.val()  || {};
+  const clients = clientsSnap.val() || {};
+  const tomorrow = getTomorrow();
+
+  log(`📅 תאריך מחר: ${tomorrow}`);
+
+  const dayAppts = getAppts(appts, tomorrow);
+  log(`📋 נמצאו ${dayAppts.length} תורים מחר`);
+
+  if (!dayAppts.length) {
+    log('✅ אין תורים מחר — לא נשלחו הודעות');
+    return;
   }
-};
 
-/* ════════ CALENDAR ════════ */
-window.Cal={
-  render(){
-    this._updateHeader();
-    if(curView==='day')  this.renderDay();
-    if(curView==='week') this.renderWeek();
-    if(curView==='month')this.renderMonth();
-  },
-  _updateHeader(){
-    const el=document.getElementById('hTitle');
-    const sub=document.getElementById('hSub');
-    if(curView==='day'){
-      el.textContent=`יום ${DAYS[viewDate.getDay()]}`;
-      sub.textContent=`${viewDate.getDate()} ${MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
-    } else if(curView==='week'){
-      const sw=startOfWeek(viewDate);
-      const ew=new Date(sw);ew.setDate(sw.getDate()+6);
-      el.textContent=`שבוע ${sw.getDate()}–${ew.getDate()} ${MONTHS[sw.getMonth()]}`;
-      sub.textContent=`${sw.getFullYear()}`;
-    } else {
-      el.textContent=`${MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`;
-      sub.textContent='';
-    }
-  },
+  let sent=0, skipped=0, failed=0;
 
-  /* ── DAY ── */
-  renderDay(){
-    const dateStr=iso(viewDate);
-    const list=getAppts(dateStr);
-    const grid=document.getElementById('dayGrid');
-    const HOURS=Array.from({length:14},(_,i)=>i+7);
-    const tHours={};
-    list.forEach(a=>{const k=`${a.therapist||'t1'}_${a.time}`;tHours[k]=(tHours[k]||0)+1;});
-    grid.innerHTML=HOURS.map(h=>{
-      const hStr=`${String(h).padStart(2,'0')}:00`;
-      const hAppts=list.filter(a=>(a.time||'').startsWith(String(h).padStart(2,'0')));
-      const conflict=hAppts.length>1;
-      const cards=hAppts.map((a,i)=>a.type==='group'?this._groupCard(a,dateStr,i,conflict):this._privateCard(a,dateStr,i,conflict)).join('');
-      return`<div class="day-hour-row">
-        <div class="day-hour-lbl">${hStr}</div>
-        <div class="day-hour-slots">
-          ${cards||`<div class="hour-empty" onclick="Appts.openWithDateTime('${dateStr}','${hStr}')">＋ הוסף תור</div>`}
-        </div>
-      </div>`;
-    }).join('');
-  },
-  _privateCard(a,dateStr,i,conflict){
-    const color=cColor(a.clientId);
-    const st=statuses[`${a.id}_${dateStr}`]||'pending';
-    const wa=waUrl(a.clientId,a);
-    return`<div class="appt-card" style="animation-delay:${i*.04}s" onclick="Cal.openDetail('${a.id}','${dateStr}')">
-      <div class="cbar" style="background:${color}"></div>
-      <div class="card-top">
-        <div><div class="card-title">${cName(a.clientId)}</div>
-          <div class="card-meta">${a.time} · ${a.duration||60} דק׳ · ${THER[a.therapist||'t1']}</div></div>
-        <div class="card-time-lbl">${a.time}</div>
-      </div>
-      <div class="card-badges">
-        <span class="badge b-prv">🏊 פרטני</span>
-        <span class="badge ${st==='confirmed'?'b-ok':st==='declined'?'b-no':'b-wait'}">${st==='confirmed'?'✅ אישר':st==='declined'?'❌ ביטל':'⏳ ממתין'}</span>
-        ${a.rec||a.recurring!=='none'?'<span class="badge b-rec">🔁</span>':''}
-        ${conflict?'<span class="badge b-warn">⚠️ חפיפה</span>':''}
-      </div>
-      <div class="card-actions" onclick="event.stopPropagation()">
-        ${wa?`<button class="ibtn wa" onclick="window.open('${wa}','_blank')">💬</button>`:''}
-        <button class="ibtn chk ${st==='confirmed'?'ok':st==='declined'?'no':''}" onclick="Cal.cycleStatus('${a.id}','${dateStr}')">
-          ${st==='confirmed'?'✓':st==='declined'?'✕':'○'}
-        </button>
-      </div>
-    </div>`;
-  },
-  _groupCard(a,dateStr,i,conflict){
-    const pList=Object.entries(a.participants||{});
-    const confC=pList.filter(([cId])=>statuses[`${a.id}_${cId}_${dateStr}`]==='confirmed').length;
-    const pRows=pList.map(([cId])=>{
-      const st=statuses[`${a.id}_${cId}_${dateStr}`]||'pending';
-      const wa=waUrl(cId,a);
-      return`<div class="p-row">
-        <div class="p-dot" style="background:${cColor(cId)}"></div>
-        <div class="p-name">${cName(cId)}</div>
-        <span style="font-size:.7rem">${st==='confirmed'?'✅':st==='declined'?'❌':'⏳'}</span>
-        <button class="ibtn chk ${st==='confirmed'?'ok':st==='declined'?'no':''}" style="width:22px;height:22px;font-size:.65rem"
-          onclick="event.stopPropagation();Cal.cycleGroup('${a.id}','${cId}','${dateStr}')">
-          ${st==='confirmed'?'✓':st==='declined'?'✕':'○'}
-        </button>
-        ${wa?`<button class="ibtn wa" style="width:22px;height:22px;font-size:.65rem" onclick="event.stopPropagation();window.open('${wa}','_blank')">💬</button>`:''}
-      </div>`;
-    }).join('');
-    return`<div class="appt-card" style="animation-delay:${i*.04}s">
-      <div class="cbar" style="background:#a78bfa"></div>
-      <div class="card-top" onclick="Cal.toggleGroup('${a.id}')">
-        <div><div class="card-title">👥 ${a.groupName||'קבוצה'}</div>
-          <div class="card-meta">${a.time} · ${a.duration||60} דק׳ · ${pList.length} משתתפים</div></div>
-        <div style="font-size:.75rem;color:var(--muted)">${confC}/${pList.length}✅</div>
-      </div>
-      <div class="card-badges" onclick="Cal.toggleGroup('${a.id}')">
-        <span class="badge b-grp">👥 קבוצתי</span>
-        ${a.rec||a.recurring!=='none'?'<span class="badge b-rec">🔁</span>':''}
-        ${conflict?'<span class="badge b-warn">⚠️ חפיפה</span>':''}
-        <span style="font-size:.65rem;color:var(--muted)">▼ הרחב</span>
-      </div>
-      <div class="group-expand" id="ge-${a.id}">
-        ${pRows}
-        <button class="btn-ghost btn-sm" style="margin-top:7px;font-size:.7rem" onclick="event.stopPropagation();Appts.openEdit('${a.id}')">✏️ ערוך</button>
-      </div>
-    </div>`;
-  },
-  toggleGroup(id){document.getElementById('ge-'+id)?.classList.toggle('open');},
+  for (const a of dayAppts) {
+    if (a.type === 'private') {
+      const client = clients[a.clientId];
+      if (!client?.phone) { skipped++; log(`⚠️ אין טלפון ל-${client?.first||a.clientId}`); continue; }
 
-  /* ── WEEK ── */
-  renderWeek(){
-    const sw=startOfWeek(viewDate);
-    const days=Array.from({length:7},(_,i)=>{const d=new Date(sw);d.setDate(sw.getDate()+i);return d;});
-    const todayStr=iso(new Date());
-    const HOURS=Array.from({length:14},(_,i)=>i+7); // 07:00–20:00
+      const msg = `שלום ${client.first||''} 😊\nתזכורת לתור שלך מחר (${tomorrow}) בשעה ${a.time}.\n\nענה *1* לאישור ✅\nענה *2* לביטול ❌`;
 
-    const dayHdrs=days.map(d=>`<div class="week-day-hdr ${iso(d)===todayStr?'today':''}">
-      <span class="wd-name">${DAYS_S[d.getDay()]}</span>
-      <span class="wd-num">${d.getDate()}</span>
-    </div>`).join('');
+      log(`📱 שולח ל-${client.first} (${client.phone})...`);
+      const ok = await sendWhatsApp(client.phone, msg);
 
-    const timeCells=HOURS.map(h=>`<div class="week-time-slot">${h}:00</div>`).join('');
-
-    const dayCols=days.map(d=>{
-      const dateStr=iso(d);
-      const dayAppts=getAppts(dateStr);
-      const hourLines=HOURS.map(h=>`<div class="week-hour-line" onclick="Appts.openWithDateTime('${dateStr}','${String(h).padStart(2,'0')}:00')"></div>`).join('');
-      const apptBlocks=dayAppts.map(a=>{
-        const [hh,mm]=(a.time||'07:00').split(':').map(Number);
-        const top=(hh-7)*52+(mm/60)*52;
-        const height=((a.duration||60)/60)*52;
-        const color=a.type==='group'?'#a78bfa':cColor(a.clientId);
-        const name=a.type==='group'?a.groupName:cName(a.clientId);
-        const st=statuses[`${a.id}_${dateStr}`]||'pending';
-        const stIcon=st==='confirmed'?'✅':st==='declined'?'❌':'';
-        return`<button class="week-appt-block" style="top:${top}px;height:${Math.max(height,18)}px;background:${color}22;color:${color};border:1px solid ${color}55"
-          onclick="Cal.openDetail('${a.id}','${dateStr}')">
-          ${stIcon} ${name}
-        </button>`;
-      }).join('');
-      return`<div class="week-day-col" onclick="Cal.clickDay('${dateStr}')">${hourLines}${apptBlocks}</div>`;
-    }).join('');
-
-    document.getElementById('weekContainer').innerHTML=`
-      <div class="week-header">
-        <div class="week-day-hdr"></div>${dayHdrs}
-      </div>
-      <div class="week-scroll">
-        <div class="week-grid">
-          <div class="week-time-col">${timeCells}</div>
-          ${dayCols}
-        </div>
-      </div>`;
-  },
-
-  clickDay(dateStr){viewDate=new Date(dateStr+'T12:00:00');App.setView('day');},
-
-  /* ── MONTH ── */
-  renderMonth(){
-    const y=viewDate.getFullYear(),m=viewDate.getMonth();
-    const firstDay=new Date(y,m,1);
-    const lastDay=new Date(y,m+1,0);
-    const todayStr=iso(new Date());
-    const startCol=firstDay.getDay();
-
-    const dayNames=DAYS_S.map(d=>`<div class="month-day-name">${d}</div>`).join('');
-
-    let cells='';
-    // empty cells before month start
-    for(let i=0;i<startCol;i++){
-      const d=new Date(y,m,1-startCol+i);
-      cells+=`<div class="month-cell other-month" onclick="Cal.clickDay('${iso(d)}')">
-        <div class="mcell-num">${d.getDate()}</div></div>`;
-    }
-    // days of month
-    for(let d=1;d<=lastDay.getDate();d++){
-      const date=new Date(y,m,d);
-      const dateStr=iso(date);
-      const dayAppts=getAppts(dateStr);
-      const isToday=dateStr===todayStr;
-      const shown=dayAppts.slice(0,2);
-      const more=dayAppts.length-2;
-      const apptDots=shown.map(a=>{
-        const color=a.type==='group'?'#a78bfa':cColor(a.clientId);
-        const name=a.type==='group'?a.groupName:cName(a.clientId);
-        return`<div class="mcell-appt" style="background:${color}22;color:${color}" onclick="event.stopPropagation();Cal.openDetail('${a.id}','${dateStr}')">${name}</div>`;
-      }).join('');
-      cells+=`<div class="month-cell${isToday?' today':''}" onclick="Appts.openWithDateTime('${dateStr}','09:00')">
-        <div class="mcell-num">${d}</div>
-        ${apptDots}
-        ${more>0?`<div class="mcell-more">+${more} נוספים</div>`:''}
-      </div>`;
-    }
-    // fill remaining
-    const total=startCol+lastDay.getDate();
-    const remain=total%7===0?0:7-total%7;
-    for(let i=1;i<=remain;i++){
-      const d=new Date(y,m+1,i);
-      cells+=`<div class="month-cell other-month" onclick="Cal.clickDay('${iso(d)}')">
-        <div class="mcell-num">${d.getDate()}</div></div>`;
-    }
-
-    document.getElementById('monthContainer').innerHTML=`
-      <div class="month-hdr">${dayNames}</div>
-      <div class="month-grid">${cells}</div>`;
-  },
-
-  /* ── STATUS ── */
-  async cycleStatus(apptId,dateStr){
-    const key=`${apptId}_${dateStr}`;
-    const cur=statuses[key]||'pending';
-    const next=cur==='pending'?'confirmed':cur==='confirmed'?'declined':'pending';
-    await set(ref(db,`statuses/${key}`),next);
-    toast(next==='confirmed'?'✅ אישר':next==='declined'?'❌ ביטל':'↩️');
-  },
-  async cycleGroup(apptId,cId,dateStr){
-    const key=`${apptId}_${cId}_${dateStr}`;
-    const cur=statuses[key]||'pending';
-    const next=cur==='pending'?'confirmed':cur==='confirmed'?'declined':'pending';
-    await set(ref(db,`statuses/${key}`),next);
-    toast(next==='confirmed'?'✅':next==='declined'?'❌':'↩️');
-  },
-
-  /* ── DETAIL ── */
-  openDetail(apptId,dateStr){
-    const a=appts[apptId];if(!a)return;
-    const isGrp=a.type==='group';
-    let html='';
-    if(!isGrp){
-      const cId=a.clientId;
-      const color=cColor(cId);const name=cName(cId);
-      const st=statuses[`${apptId}_${dateStr}`]||'pending';
-      const c=clients[cId]||{};const wa=waUrl(cId,a);
-      html=`<div class="detail-hdr">
-        <div class="davatar" style="background:${color}">${(name[0]||'?')}</div>
-        <div><div class="dtitle">${name}</div><div class="dsub">${a.date} · ${a.time}</div></div>
-      </div>
-      <div class="dsec"><h4>פרטי תור</h4>
-        <div style="font-size:.82rem;line-height:2.1">
-          ⏱️ ${a.duration||60} דק׳ &nbsp; 👩‍⚕️ ${THER[a.therapist||'t1']}<br>
-          📞 ${c.phone||'אין'} &nbsp; 🎂 גיל ${c.age||'—'}<br>
-          ${c.notes?`🏥 ${c.notes}<br>`:''}
-          ${a.notes?`📝 ${a.notes}<br>`:''}
-        </div>
-      </div>
-      <div class="dsec"><h4>סטטוס</h4>
-        <span class="badge ${st==='confirmed'?'b-ok':st==='declined'?'b-no':'b-wait'}" style="font-size:.82rem;padding:5px 12px">
-          ${st==='confirmed'?'✅ אישר הגעה':st==='declined'?'❌ ביטל':'⏳ ממתין'}
-        </span>
-      </div>
-      <div class="dactions">
-        <button class="btn-full" onclick="Cal.cycleStatus('${apptId}','${dateStr}');M.close('mo-detail')">
-          ${st==='pending'?'✅ אשר':st==='confirmed'?'❌ בטל':'↩️ איפוס'}
-        </button>
-        ${wa?`<button class="btn-full" style="background:linear-gradient(135deg,#128C7E,#25D366)" onclick="window.open('${wa}','_blank')">💬 ווטסאפ</button>`:''}
-      </div>
-      <button class="btn-ghost btn-sm" style="width:100%;margin-top:8px;padding:9px" onclick="Appts.openEdit('${apptId}')">✏️ ערוך</button>`;
-    } else {
-      const pList=Object.entries(a.participants||{});
-      const pRows=pList.map(([cId])=>{
-        const st=statuses[`${apptId}_${cId}_${dateStr}`]||'pending';
-        const wa=waUrl(cId,a);
-        return`<div class="p-row" style="border-bottom:1px solid var(--border);padding-bottom:7px;margin-bottom:7px">
-          <div class="p-dot" style="background:${cColor(cId)}"></div>
-          <div class="p-name">${cName(cId)}</div>
-          <span class="badge ${st==='confirmed'?'b-ok':st==='declined'?'b-no':'b-wait'}">${st==='confirmed'?'✅':st==='declined'?'❌':'⏳'}</span>
-          <button class="ibtn chk ${st==='confirmed'?'ok':''}" onclick="Cal.cycleGroup('${apptId}','${cId}','${dateStr}')">
-            ${st==='confirmed'?'✓':st==='declined'?'✕':'○'}
-          </button>
-          ${wa?`<button class="ibtn wa" onclick="window.open('${wa}','_blank')">💬</button>`:''}
-        </div>`;
-      }).join('');
-      html=`<div class="detail-hdr">
-        <div class="davatar" style="background:#a78bfa">👥</div>
-        <div><div class="dtitle">${a.groupName||'קבוצה'}</div><div class="dsub">${a.date} · ${a.time} · ${pList.length} משתתפים</div></div>
-      </div>
-      <div class="dsec"><h4>משתתפים</h4>${pRows}</div>
-      <button class="btn-ghost btn-sm" style="width:100%;padding:9px" onclick="Appts.openEdit('${apptId}')">✏️ ערוך</button>`;
-    }
-    document.getElementById('detailBody').innerHTML=html;
-    M.open('mo-detail');
-  }
-};
-
-/* ════════ APPOINTMENTS ════════ */
-window.Appts={
-  switchType(type){
-    document.getElementById('aType').value=type;
-    document.getElementById('fPrivate').style.display=type==='private'?'block':'none';
-    document.getElementById('fGroup').style.display=type==='group'?'block':'none';
-    document.getElementById('ft-prv').classList.toggle('active',type==='private');
-    document.getElementById('ft-grp').classList.toggle('active',type==='group');
-  },
-  openWithDateTime(dateStr,time){
-    this._reset();
-    document.getElementById('apptTitle').textContent='תור חדש';
-    document.getElementById('delApptBtn').style.display='none';
-    document.getElementById('aDate').value=dateStr;
-    document.getElementById('aTime').value=time;
-    this._fillClients();
-    M.open('mo-appt');
-  },
-  openAdd(){
-    this._reset();
-    document.getElementById('apptTitle').textContent='תור חדש';
-    document.getElementById('delApptBtn').style.display='none';
-    document.getElementById('aDate').value=iso(viewDate);
-    this._fillClients();
-    M.open('mo-appt');
-  },
-  openEdit(id){
-    const a=appts[id];if(!a)return;
-    this._reset();
-    document.getElementById('apptTitle').textContent='עריכת תור';
-    document.getElementById('delApptBtn').style.display='block';
-    document.getElementById('aId').value=id;
-    document.getElementById('aDate').value=a.date||'';
-    document.getElementById('aTime').value=a.time||'09:00';
-    document.getElementById('aDur').value=a.duration||'60';
-    document.getElementById('aTherapist').value=a.therapist||'t1';
-    document.getElementById('aRec').value=a.recurring||'none';
-    document.getElementById('aNotes').value=a.notes||'';
-    if(a.type==='group'){
-      this.switchType('group');
-      document.getElementById('aGName').value=a.groupName||'';
-      _partCount=0;document.getElementById('gParts').innerHTML='';
-      Object.keys(a.participants||{}).forEach(cId=>this.addPart(cId));
-    } else {
-      this.switchType('private');this._fillClients(a.clientId);
-    }
-    M.close('mo-detail');M.open('mo-appt');
-  },
-  _reset(){
-    ['aId','aDate','aNotes','aGName'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('aType').value='private';
-    document.getElementById('aTime').value='09:00';
-    document.getElementById('aDur').value='60';
-    document.getElementById('aTherapist').value='t1';
-    document.getElementById('aRec').value='none';
-    document.getElementById('gParts').innerHTML='';
-    document.getElementById('conflictWarn').style.display='none';
-    _partCount=0;this.switchType('private');
-  },
-  _fillClients(sel=''){
-    const el=document.getElementById('aClient');
-    el.innerHTML='<option value="">-- בחר --</option>'+
-      Object.entries(clients).filter(([,c])=>c).map(([id,c])=>
-        `<option value="${id}"${id===sel?' selected':''}>${c.first||''} ${c.last||''}</option>`).join('');
-  },
-  addPart(pre=''){
-    const opts=Object.entries(clients).filter(([,c])=>c).map(([id,c])=>
-      `<option value="${id}"${id===pre?' selected':''}>${c.first||''} ${c.last||''}</option>`).join('');
-    const idx=_partCount++;
-    const r=document.createElement('div');r.className='p-row-form';r.id='pr-'+idx;
-    r.innerHTML=`<select class="p-sel"><option value="">-- בחר --</option>${opts}</select>
-      <button class="p-del" onclick="document.getElementById('pr-${idx}').remove()">✕</button>`;
-    document.getElementById('gParts').appendChild(r);
-  },
-  async save(){
-    const id=document.getElementById('aId').value;
-    const type=document.getElementById('aType').value;
-    const date=document.getElementById('aDate').value;
-    const time=document.getElementById('aTime').value;
-    if(!date||!time){toast('⚠️ תאריך ושעה חובה');return;}
-    let data={type,date,time,duration:document.getElementById('aDur').value,
-      therapist:document.getElementById('aTherapist').value,
-      recurring:document.getElementById('aRec').value,
-      notes:document.getElementById('aNotes').value.trim()};
-    if(type==='private'){
-      const cId=document.getElementById('aClient').value;
-      if(!cId){toast('⚠️ בחר לקוח');return;}
-      data.clientId=cId;
-    } else {
-      const gn=document.getElementById('aGName').value.trim();
-      if(!gn){toast('⚠️ הכנס שם קבוצה');return;}
-      data.groupName=gn;
-      const parts={};
-      document.querySelectorAll('.p-sel').forEach(s=>{if(s.value)parts[s.value]=true;});
-      data.participants=parts;
-    }
-    const sid=id||push(ref(db,'appts')).key;
-    await set(ref(db,`appts/${sid}`),data);
-    // sync to Google Calendar
-    GCal.addEvent(data, sid);
-    viewDate=new Date(date+'T12:00:00');
-    M.close('mo-appt');App.openPanel('calendar');toast('✅ תור נשמר');
-  },
-  async del(){
-    const id=document.getElementById('aId').value;
-    if(!id||!confirm('למחוק?'))return;
-    // delete from Google Calendar first
-    const a=appts[id];
-    if(a?.gcalId) await GCal.deleteEvent(a.gcalId);
-    await remove(ref(db,`appts/${id}`));
-    M.close('mo-appt');toast('🗑️ נמחק');
-  }
-};
-
-/* ════════ CLIENTS ════════ */
-window.Clients={
-  openAdd(){
-    document.getElementById('clientTitle').textContent='לקוח חדש';
-    document.getElementById('cId').value='';
-    ['cFirst','cLast','cPhone','cAge','cNotes'].forEach(id=>document.getElementById(id).value='');
-    document.getElementById('delClientBtn').style.display='none';
-    selColor=COLORS[0];this._buildPicker();M.open('mo-client');
-  },
-  openEdit(id){
-    const c=clients[id];if(!c)return;
-    document.getElementById('clientTitle').textContent='עריכת לקוח';
-    document.getElementById('cId').value=id;
-    document.getElementById('cFirst').value=c.first||'';
-    document.getElementById('cLast').value=c.last||'';
-    document.getElementById('cPhone').value=c.phone||'';
-    document.getElementById('cAge').value=c.age||'';
-    document.getElementById('cNotes').value=c.notes||'';
-    document.getElementById('delClientBtn').style.display='block';
-    selColor=c.color||COLORS[0];this._buildPicker();M.open('mo-client');
-  },
-  _buildPicker(){
-    document.getElementById('colorPicker').innerHTML=COLORS.map(c=>
-      `<div class="cswatch${c===selColor?' sel':''}" style="background:${c}" onclick="Clients._pick('${c}')"></div>`).join('');
-  },
-  _pick(c){selColor=c;document.querySelectorAll('.cswatch').forEach(s=>s.classList.remove('sel'));
-    document.querySelectorAll('.cswatch').forEach(s=>{if(s.style.background===c)s.classList.add('sel');});},
-  async save(){
-    const first=document.getElementById('cFirst').value.trim();
-    if(!first){toast('⚠️ שם חובה');return;}
-    const id=document.getElementById('cId').value||push(ref(db,'clients')).key;
-    await set(ref(db,`clients/${id}`),{first,last:document.getElementById('cLast').value.trim(),
-      phone:document.getElementById('cPhone').value.trim(),age:document.getElementById('cAge').value.trim(),
-      notes:document.getElementById('cNotes').value.trim(),color:selColor});
-    M.close('mo-client');toast('✅ לקוח נשמר');
-  },
-  async del(){
-    const id=document.getElementById('cId').value;
-    if(!id||!confirm('למחוק לקוח?'))return;
-    await remove(ref(db,`clients/${id}`));M.close('mo-client');toast('🗑️ נמחק');
-  },
-  render(){
-    const q=(document.getElementById('clientSearch')?.value||'').toLowerCase();
-    const el=document.getElementById('clientsList');
-    const all=Object.entries(clients).filter(([,c])=>c&&`${c.first} ${c.last}`.toLowerCase().includes(q));
-    if(!all.length){el.innerHTML=`<div class="empty-day"><div class="icon">👤</div><p>${q?'לא נמצא':'הוסף לקוח ראשון'}</p></div>`;return;}
-    const m=iso(new Date()).slice(0,7);
-    const cnt={};
-    Object.values(appts).forEach(a=>{if(!a||!a.date?.startsWith(m))return;
-      if(a.type==='private'&&a.clientId)cnt[a.clientId]=(cnt[a.clientId]||0)+1;
-      if(a.type==='group'&&a.participants)Object.keys(a.participants).forEach(id=>cnt[id]=(cnt[id]||0)+1);});
-    el.innerHTML=all.map(([id,c],i)=>`
-      <div class="client-row" onclick="Clients.openEdit('${id}')" style="animation-delay:${i*.03}s">
-        <div class="cavatar" style="background:${c.color||'#22d3ee'}">${(c.first||'?')[0]}</div>
-        <div class="cinfo">
-          <div class="cname">${c.first||''} ${c.last||''}</div>
-          <div class="csub">${c.phone||'אין טלפון'}${c.age?' · גיל '+c.age:''}${cnt[id]?' · '+cnt[id]+' תורים':''}</div>
-        </div>
-        <span style="color:var(--muted)">›</span>
-      </div>`).join('');
-  }
-};
-
-/* ════════ REPORTS ════════ */
-window.Reports={
-  _tab:'daily',
-  sw(tab,btn){this._tab=tab;document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-    if(tab==='daily')this.renderDaily();if(tab==='client')this.renderClient();if(tab==='monthly')this.renderMonthly();},
-  refresh(){if(document.getElementById('panel-reports').classList.contains('active')){
-    if(this._tab==='daily')this.renderDaily();if(this._tab==='monthly')this.renderMonthly();}},
-  renderDaily(){
-    const el=document.getElementById('reportContent');
-    const dateStr=document.getElementById('rDatePick')?.value||iso(viewDate);
-    el.innerHTML=`<div class="rdrow"><label>תאריך:</label>
-      <input type="date" id="rDatePick" value="${dateStr}" onchange="Reports.renderDaily()"></div>
-      <div id="rdBody"></div>`;
-    const list=getAppts(dateStr);
-    const conf=list.filter(a=>statuses[`${a.id}_${dateStr}`]==='confirmed').length;
-    const decl=list.filter(a=>statuses[`${a.id}_${dateStr}`]==='declined').length;
-    document.getElementById('rdBody').innerHTML=`
-      <div class="stats-row">
-        <div class="stat-card"><div class="n">${list.length}</div><div class="l">סה״כ</div></div>
-        <div class="stat-card"><div class="n">${conf}</div><div class="l">אישרו</div></div>
-        <div class="stat-card"><div class="n">${list.length-conf-decl}</div><div class="l">ממתינים</div></div>
-        <div class="stat-card"><div class="n">${list.length?Math.round(conf/list.length*100):0}%</div><div class="l">אחוז</div></div>
-      </div>
-      ${list.map(a=>{
-        const isG=a.type==='group';
-        if(isG){const pl=Object.entries(a.participants||{});const gc=pl.filter(([cId])=>statuses[`${a.id}_${cId}_${dateStr}`]==='confirmed').length;
-          return`<div class="report-item"><div class="ri-dot" style="background:#a78bfa"></div>
-            <div class="ri-info"><strong>👥 ${a.groupName||'קבוצה'}</strong><span>${a.time} · ${pl.length} משתתפים · ${gc} אישרו</span></div></div>`;}
-        const st=statuses[`${a.id}_${dateStr}`]||'pending';
-        const wa=waUrl(a.clientId,a);
-        return`<div class="report-item"><div class="ri-dot" style="background:${cColor(a.clientId)}"></div>
-          <div class="ri-info"><strong>${cName(a.clientId)}</strong><span>${a.time} · ${a.duration||60} דק׳</span></div>
-          <div class="ri-st" style="color:${st==='confirmed'?'var(--green)':st==='declined'?'var(--red)':'var(--yellow)'}">
-            ${st==='confirmed'?'✅':st==='declined'?'❌':'⏳'}</div>
-          ${wa&&st!=='confirmed'?`<div class="ri-wa" onclick="window.open('${wa}','_blank')">💬</div>`:''}</div>`;
-      }).join('')||'<p style="color:var(--muted);text-align:center;padding:24px">אין תורים</p>'}`;
-  },
-  renderClient(){
-    const el=document.getElementById('reportContent');
-    const opts=Object.entries(clients).filter(([,c])=>c).map(([id,c])=>
-      `<option value="${id}">${c.first||''} ${c.last||''}</option>`).join('');
-    el.innerHTML=`<select class="cselect" id="rClientSel" onchange="Reports._showClient(this.value)">
-      <option value="">-- בחר לקוח --</option>${opts}</select><div id="rClientBody"></div>`;
-  },
-  _showClient(cId){
-    if(!cId)return;const c=clients[cId];if(!c)return;
-    const el=document.getElementById('rClientBody');
-    const now=new Date();const thisM=iso(now).slice(0,7);
-    const lastM=new Date(now.getFullYear(),now.getMonth()-1,1).toISOString().slice(0,7);
-    let total=0,thisC=0,lastC=0;const list=[];
-    Object.entries(appts).forEach(([id,a])=>{
-      if(!a)return;let ok=false;
-      if(a.type==='private'&&a.clientId===cId)ok=true;
-      if(a.type==='group'&&a.participants?.[cId])ok=true;
-      if(!ok)return;total++;
-      if(a.date?.startsWith(thisM))thisC++;
-      if(a.date?.startsWith(lastM))lastC++;
-      list.push({...a,id});
-    });
-    list.sort((a,b)=>b.date>a.date?1:-1);
-    el.innerHTML=`<div class="stats-row" style="margin-top:10px">
-      <div class="stat-card"><div class="n">${total}</div><div class="l">סה״כ</div></div>
-      <div class="stat-card"><div class="n">${thisC}</div><div class="l">החודש</div></div>
-      <div class="stat-card"><div class="n">${lastC}</div><div class="l">חודש שעבר</div></div>
-      <div class="stat-card"><div class="n">${c.phone||'—'}</div><div class="l">טלפון</div></div>
-    </div>
-    ${c.notes?`<div style="background:var(--card);border:1px solid var(--border);border-radius:9px;padding:10px 12px;font-size:.78rem;margin-bottom:10px">🏥 ${c.notes}</div>`:''}
-    ${list.slice(0,20).map(a=>`<div class="report-item">
-      <div class="ri-dot" style="background:${a.type==='group'?'#a78bfa':cColor(cId)}"></div>
-      <div class="ri-info"><strong>${a.date} · ${a.time}</strong>
-      <span>${a.type==='group'?'👥 '+a.groupName:'🏊 פרטני'} · ${a.duration||60} דק׳</span></div>
-    </div>`).join('')}`;
-  },
-  renderMonthly(){
-    const el=document.getElementById('reportContent');
-    const now=new Date();const m=iso(now).slice(0,7);
-    const pc={};
-    Object.values(appts).forEach(a=>{if(!a||!a.date?.startsWith(m))return;
-      if(a.type==='private'&&a.clientId)pc[a.clientId]=(pc[a.clientId]||0)+1;
-      if(a.type==='group'&&a.participants)Object.keys(a.participants).forEach(id=>pc[id]=(pc[id]||0)+1);});
-    const sorted=Object.entries(pc).sort((a,b)=>b[1]-a[1]);
-    el.innerHTML=`<h4 style="font-size:.78rem;color:var(--muted);margin-bottom:10px">${MONTHS[now.getMonth()]} ${now.getFullYear()}</h4>
-      ${sorted.map(([id,n])=>`<div class="report-item">
-        <div class="ri-dot" style="background:${cColor(id)}"></div>
-        <div class="ri-info"><strong>${cName(id)}</strong><span>${n} פגישות</span></div>
-        <div class="ri-st" style="color:var(--accent)">${n}</div>
-      </div>`).join('')||'<p style="color:var(--muted);text-align:center;padding:24px">אין נתונים</p>'}`;
-  }
-};
-
-/* ════════ MODAL ════════ */
-window.M={
-  open(id){document.getElementById(id).classList.add('open');},
-  close(id){document.getElementById(id).classList.remove('open');}
-};
-document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
-
-/* ════════ GOOGLE CALENDAR ════════ */
-const GCAL_CLIENT_ID='760190545822-blpbr214irapb42guapdms48u3ok4sf0.apps.googleusercontent.com';
-const GCAL_SCOPES='https://www.googleapis.com/auth/calendar.events';
-let gcalToken=null;
-
-window.GCal={
-  connect(){
-    if(!window.google?.accounts?.oauth2){toast('⏳ Google SDK טוען, נסה שוב');return;}
-    const client=google.accounts.oauth2.initTokenClient({
-      client_id:GCAL_CLIENT_ID,
-      scope:GCAL_SCOPES,
-      callback:(resp)=>{
-        if(resp.error){toast('❌ שגיאת התחברות');return;}
-        gcalToken=resp.access_token;
-        localStorage.setItem('gcal_token',gcalToken);
-        this._setConnected(true);
-        toast('✅ Google Calendar מחובר!');
+      if (ok) {
+        sent++;
+        await set(ref(db,`statuses/${a.id}_${tomorrow}`), 'sent');
+        log(`✅ נשלח ל-${client.first}`);
+      } else {
+        failed++;
+        log(`❌ נכשל עבור ${client.first}`);
       }
-    });
-    client.requestAccessToken();
-  },
 
-  _setConnected(on){
-    const btn=document.getElementById('gcalBtn');
-    if(on){btn.textContent='📅 מחובר ✓';btn.classList.add('connected');}
-    else{btn.textContent='📅 Google';btn.classList.remove('connected');}
-  },
+    } else if (a.type === 'group') {
+      const parts = Object.keys(a.participants||{});
+      for (const cId of parts) {
+        const client = clients[cId];
+        if (!client?.phone) { skipped++; continue; }
 
-  _colorToGcalId(hexColor){
-    // Google Calendar color IDs:
-    // 1=כחול כהה, 2=ירוק, 3=סגול, 4=אדום, 5=צהוב, 6=כתום, 7=טורקיז, 8=אפור, 9=כחול, 10=ירוק כהה, 11=אדום כהה
-    const map={
-      '#22d3ee':'7', // טורקיז
-      '#3b82f6':'9', // כחול
-      '#a78bfa':'3', // סגול
-      '#f472b6':'4', // ורוד/אדום
-      '#fb923c':'6', // כתום
-      '#34d399':'2', // ירוק
-      '#f87171':'11',// אדום
-      '#fbbf24':'5', // צהוב
-      '#60a5fa':'1', // כחול כהה
-      '#e879f9':'3', // סגול ורוד
-      '#4ade80':'10',// ירוק כהה
-      '#f97316':'6', // כתום כהה
-    };
-    return map[hexColor]||'1';
-  },
+        const msg = `שלום ${client.first||''} 😊\nתזכורת לשיעור "${a.groupName||'קבוצה'}" מחר (${tomorrow}) בשעה ${a.time}.\n\nענה *1* לאישור ✅\nענה *2* לביטול ❌`;
 
-  async addEvent(apptData, apptSid){
-    if(!gcalToken){return;}
-    const name = apptData.type==='group'
-      ? `👥 ${apptData.groupName||'קבוצה'}`
-      : `🏊 ${cName(apptData.clientId)}`;
+        log(`📱 שולח ל-${client.first} (קבוצה: ${a.groupName})...`);
+        const ok = await sendWhatsApp(client.phone, msg);
 
-    // build proper ISO dateTime strings
-    const startDate = new Date(`${apptData.date}T${apptData.time}:00`);
-    const endDate   = new Date(startDate.getTime() + parseInt(apptData.duration||60)*60000);
-    const toISO = d => d.toISOString(); // UTC is fine with timeZone specified
-
-    let desc=`מטפלת: ${THER[apptData.therapist||'t1']}`;
-    if(apptData.type==='private'){
-      const c=clients[apptData.clientId]||{};
-      if(c.phone)desc+=`\nטלפון: ${c.phone}`;
-      if(c.notes)desc+=`\nהערות: ${c.notes}`;
-    } else {
-      const parts=Object.keys(apptData.participants||{}).map(id=>cName(id)).join(', ');
-      desc+=`\nמשתתפים: ${parts}`;
-    }
-    if(apptData.notes)desc+=`\n${apptData.notes}`;
-
-    const clientColor = apptData.type==='private' ? cColor(apptData.clientId) : '#a78bfa';
-    const event={
-      summary: name,
-      description: desc,
-      start:{ dateTime: toISO(startDate), timeZone:'Asia/Jerusalem' },
-      end:  { dateTime: toISO(endDate),   timeZone:'Asia/Jerusalem' },
-      colorId: apptData.type==='group' ? '3' : this._colorToGcalId(clientColor),
-    };
-
-    if(apptData.recurring==='weekly')   event.recurrence=['RRULE:FREQ=WEEKLY'];
-    if(apptData.recurring==='biweekly') event.recurrence=['RRULE:FREQ=WEEKLY;INTERVAL=2'];
-
-    try{
-      const res=await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events',{
-        method:'POST',
-        headers:{Authorization:`Bearer ${gcalToken}`,'Content-Type':'application/json'},
-        body:JSON.stringify(event)
-      });
-      if(res.ok){
-        const gcalEvent = await res.json();
-        console.log('GCal event created:', gcalEvent.id, 'apptSid:', apptSid);
-        // save gcal event id to firebase for later deletion
-        if(gcalEvent.id && apptSid){
-          await set(ref(db,`appts/${apptSid}/gcalId`), gcalEvent.id);
-          console.log('gcalId saved to Firebase ✅');
+        if (ok) {
+          sent++;
+          await set(ref(db,`statuses/${a.id}_${cId}_${tomorrow}`), 'sent');
+          log(`✅ נשלח ל-${client.first}`);
         } else {
-          console.warn('Missing gcalEvent.id or apptSid', gcalEvent.id, apptSid);
+          failed++;
+          log(`❌ נכשל עבור ${client.first}`);
         }
-        toast('📅 נוסף ל-Google Calendar ✓');
       }
-      else if(res.status===401){ gcalToken=null; this._setConnected(false); toast('⚠️ חיבור Google פג — התחבר מחדש'); }
-      else { const err=await res.json(); console.warn('GCal error',err); toast('⚠️ שגיאה ב-Google Calendar'); }
-    }catch(e){ console.warn('GCal error',e); }
-  },
-
-  async deleteEvent(gcalId){
-    if(!gcalToken||!gcalId)return;
-    try{
-      await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${gcalId}`,{
-        method:'DELETE',headers:{Authorization:`Bearer ${gcalToken}`}
-      });
-    }catch(e){}
-  },
-
-  init(){
-    const saved=localStorage.getItem('gcal_token');
-    if(saved){gcalToken=saved;this._setConnected(true);}
+    }
   }
-};
 
-/* ── INIT ── */
-GCal.init();
-App.setView('day');
-Cal.render();
+  log(`\n📊 סיכום:`);
+  log(`✅ נשלחו: ${sent}`);
+  log(`⚠️ ללא טלפון: ${skipped}`);
+  log(`❌ נכשלו: ${failed}`);
+}
+
+run().catch(e => log('❌ שגיאה: '+e.message));
 </script>
 </body>
 </html>
