@@ -12,6 +12,58 @@
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <style>
+/* ════════ LOGIN SCREEN ════════ */
+#loginScreen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  flex-direction:column;
+}
+#loginScreen::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 60% 50% at 50% 30%,#3b82f620 0%,transparent 60%);
+}
+.login-box{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:36px 32px;width:340px;max-width:90vw;
+  position:relative;z-index:1;
+  box-shadow:0 20px 60px #0009;
+  animation:fadeUp .4s ease;
+}
+.login-logo{
+  text-align:center;margin-bottom:28px;
+}
+.login-logo .icon{font-size:2.5rem;display:block;margin-bottom:8px}
+.login-logo h1{
+  font-size:1.4rem;font-weight:800;
+  background:linear-gradient(135deg,var(--accent2),var(--accent));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.login-logo p{font-size:.8rem;color:var(--muted);margin-top:4px}
+.login-field{margin-bottom:14px}
+.login-field label{display:block;font-size:.78rem;color:var(--muted);margin-bottom:6px;font-weight:500}
+.login-field input{
+  width:100%;background:var(--bg);border:1px solid var(--border);
+  border-radius:10px;padding:11px 14px;color:var(--text);
+  font-family:'Heebo',sans-serif;font-size:.95rem;outline:none;
+  transition:border-color .18s;
+}
+.login-field input:focus{border-color:var(--accent2);}
+.login-btn{
+  width:100%;padding:12px;margin-top:6px;
+  background:linear-gradient(135deg,var(--accent2),var(--accent));
+  border:none;border-radius:10px;color:#fff;
+  font-family:'Heebo',sans-serif;font-size:1rem;font-weight:700;
+  cursor:pointer;transition:all .18s;
+}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 5px 18px #3b82f655}
+.login-error{
+  background:#f43f5e18;border:1px solid #f43f5e55;
+  border-radius:8px;padding:9px 12px;
+  font-size:.82rem;color:var(--red);
+  margin-top:10px;display:none;text-align:center;
+}
+
 /* ════════ VARIABLES ════════ */
 :root {
   --bg:#0a1628;--bg2:#0e1e35;--card:#132040;--card2:#1a2d50;
@@ -298,6 +350,28 @@ nav{height:var(--nh);background:#0a1628ee;backdrop-filter:blur(18px);
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <span class="icon">🌊</span>
+      <h1>Pool Pro</h1>
+      <p>בריכה טיפולית — כניסה למערכת</p>
+    </div>
+    <div class="login-field">
+      <label>שם משתמש</label>
+      <input type="text" id="loginUser" placeholder="admin" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>סיסמה</label>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')Auth.login()">
+    </div>
+    <button class="login-btn" onclick="Auth.login()">כניסה למערכת</button>
+    <div class="login-error" id="loginError">שם משתמש או סיסמה שגויים</div>
+  </div>
+</div>
+
 <!-- HEADER -->
 <header>
   <div class="logo">🌊 <span>Pool</span>Pro</div>
@@ -313,6 +387,7 @@ nav{height:var(--nh);background:#0a1628ee;backdrop-filter:blur(18px);
   <div class="hright">
     <button class="hbtn gcal-btn" id="gcalBtn" onclick="GCal.connect()" title="חבר Google Calendar">📅 Google</button>
     <button class="hbtn" onclick="App.goToday()">היום</button>
+    <button class="hbtn" onclick="Auth.logout()" title="יציאה">🚪</button>
     <div class="view-sw" id="viewSw">
       <button class="vbtn active" id="vb-day"   onclick="App.setView('day')">יום</button>
       <button class="vbtn"        id="vb-week"  onclick="App.setView('week')">שבוע</button>
@@ -1342,7 +1417,42 @@ window.Reminders={
   }
 };
 
+/* ════════ AUTH ════════ */
+// שנה את הפרטים האלה לפרטים שלך!
+const CREDENTIALS = {
+  username: 'admin',
+  password: 'pool2024'
+};
+
+window.Auth = {
+  init(){
+    const saved = localStorage.getItem('pool-auth');
+    if (saved === 'ok') {
+      this._show();
+    }
+  },
+  login(){
+    const user = document.getElementById('loginUser').value.trim();
+    const pass = document.getElementById('loginPass').value;
+    if (user === CREDENTIALS.username && pass === CREDENTIALS.password) {
+      localStorage.setItem('pool-auth','ok');
+      this._show();
+    } else {
+      document.getElementById('loginError').style.display = 'block';
+      document.getElementById('loginPass').value = '';
+    }
+  },
+  logout(){
+    localStorage.removeItem('pool-auth');
+    location.reload();
+  },
+  _show(){
+    document.getElementById('loginScreen').style.display = 'none';
+  }
+};
+
 /* ── INIT ── */
+Auth.init();
 GCal.init();
 App.setView('day');
 Cal.render();
