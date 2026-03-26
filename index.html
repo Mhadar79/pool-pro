@@ -5,7 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Pool Pro">
-<meta name="theme-color" content="#0a1628">
+<meta name="theme-color" content="#ffffff">
+<style>
+  /* נעילה לאורך בלבד */
+  @media screen and (orientation: landscape) and (max-width: 900px) {
+    body::after {
+      content: '🔄 סובב את המסך לאורך';
+      position: fixed; inset: 0; z-index: 99999;
+      background: #fff; color: #1a2d45;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Heebo', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      flex-direction: column; gap: 12px;
+      text-align: center; padding: 24px;
+    }
+  }
+</style>
 <title>Pool Pro — בריכה טיפולית</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -80,34 +95,66 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
              radial-gradient(ellipse 35% 50% at 85% 92%,#0ea5e908 0%,transparent 55%)}
 
 /* ════════ HEADER ════════ */
-header{height:var(--hh);background:var(--bg2);backdrop-filter:blur(18px);
-  border-bottom:1px solid var(--border);display:flex;align-items:center;
-  padding:0 10px;gap:6px;position:relative;z-index:100;flex-shrink:0;
-  box-shadow:0 1px 8px #3b82f610}
+header{
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center;
+  padding:0 10px; gap:6px;
+  position:relative; z-index:100; flex-shrink:0;
+  box-shadow:0 1px 8px #3b82f610;
+  flex-wrap:wrap;
+  min-height:var(--hh);
+  height:auto;
+  padding-top:6px; padding-bottom:6px;
+}
+/* שורה ראשונה: לוגו + ניווט תאריך + כפתורים */
 .logo{font-size:1.05rem;font-weight:800;
   background:linear-gradient(135deg,var(--accent2),var(--accent));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
 .logo span{font-weight:300}
 .sync{font-size:.65rem;flex-shrink:0}
-.hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:4px}
+.hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:4px;min-width:0}
 .nav-arrow{width:28px;height:28px;border-radius:7px;background:var(--card);
   border:1px solid var(--border);color:var(--text);font-size:1rem;cursor:pointer;
   display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .nav-arrow:hover{border-color:var(--accent);color:var(--accent)}
-.hdate{text-align:center;cursor:pointer;user-select:none;min-width:100px}
-.hdate span{font-size:.88rem;font-weight:700;display:block}
-.hdate small{font-size:.65rem;color:var(--muted)}
-.hright{display:flex;gap:4px;align-items:center}
+.hdate{text-align:center;cursor:pointer;user-select:none;min-width:90px}
+.hdate span{font-size:.85rem;font-weight:700;display:block;white-space:nowrap}
+.hdate small{font-size:.62rem;color:var(--muted)}
+.hright{display:flex;gap:4px;align-items:center;flex-shrink:0}
 .gcal-btn{color:var(--accent)!important;border-color:var(--accent)!important}
 .gcal-btn.connected{color:var(--green)!important;border-color:var(--green)!important}
 .hbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);
   font-family:'Heebo',sans-serif;font-size:.75rem;padding:4px 8px;
   border-radius:7px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .hbtn:hover{color:var(--text);border-color:var(--accent)}
-.view-sw{display:flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+/* view switcher — שורה שנייה במובייל */
+.view-sw{
+  display:flex;background:var(--card);border:1px solid var(--border);
+  border-radius:8px;overflow:hidden;
+}
 .vbtn{background:none;border:none;color:var(--muted);font-family:'Heebo',sans-serif;
   font-size:.72rem;font-weight:600;padding:5px 8px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .vbtn.active{background:var(--accent2);color:#fff}
+
+/* במובייל קטן — הסתר gcal ב-header וקטן כפתורים */
+@media(max-width:480px){
+  .gcal-btn{ display:none; }
+  .hbtn{ font-size:.7rem; padding:4px 6px; }
+  .hdate span{ font-size:.8rem; }
+  .logo{ font-size:.95rem; }
+  /* view switcher עובר לשורה נפרדת */
+  .view-sw{
+    width:100%;
+    order:10;
+    border-radius:0;
+    border-left:none;border-right:none;border-top:1px solid var(--border);
+    margin:4px -10px 0;
+    padding:0 10px;
+    width:calc(100% + 20px);
+  }
+  .vbtn{ flex:1; text-align:center; padding:6px 4px; }
+}
 
 /* ════════ MAIN ════════ */
 #mainArea{flex:1;overflow:hidden;position:relative;z-index:10;display:flex;flex-direction:column}
@@ -536,7 +583,20 @@ const fb = initializeApp({
 const db = getDatabase(fb);
 
 /* ── STATE ── */
-const COLORS=['#22d3ee','#3b82f6','#a78bfa','#f472b6','#fb923c','#34d399','#f87171','#fbbf24','#60a5fa','#e879f9','#4ade80','#f97316'];
+const COLORS=[
+  // כחולים וטורקיז
+  '#0ea5e9','#22d3ee','#3b82f6','#6366f1',
+  // ירוקים
+  '#10b981','#34d399','#84cc16','#4ade80',
+  // אדומים וורודים
+  '#f43f5e','#fb7185','#f472b6','#e879f9',
+  // כתומים וצהובים
+  '#f97316','#fb923c','#fbbf24','#facc15',
+  // סגולים
+  '#a78bfa','#8b5cf6','#7c3aed','#c084fc',
+  // חומים וניוטרלים
+  '#94a3b8','#64748b','#06b6d4','#0891b2'
+];
 const DAYS=['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
 const DAYS_S=['א׳','ב׳','ג׳','ד׳','ה׳','ו׳','ש׳'];
 const MONTHS=['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
